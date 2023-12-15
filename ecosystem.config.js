@@ -1,3 +1,5 @@
+const {TG_TOKEN, MONGO_URI} = require("./config/config");
+
 module.exports = {
   apps: [
     {
@@ -7,8 +9,8 @@ module.exports = {
       ignore_watch: ['node_modules'],
       env: {
         NODE_ENV: 'production',
-        TG_TOKEN: process.env.TG_TOKEN,
-        MONGO_URI: process.env.MONGO_URI,
+        TG_TOKEN: TG_TOKEN,
+        MONGO_URI: MONGO_URI,
       },
     },
   ],
