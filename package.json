@@ -1,0 +1,45 @@
+{
+  "name": "secret-santa-bot",
+  "version": "2.0.0",
+  "description": "Secret-santa telegram bot",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "dev": "nodemon index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/w1z2z/secret-santa-tg.git"
+  },
+  "keywords": [
+    "tg",
+    "telegram",
+    "node",
+    "telegraf",
+    "mongo"
+  ],
+  "author": "Vitaliy Kochergin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/w1z2z/secret-santa-tg/issues"
+  },
+  "homepage": "https://github.com/w1z2z/secret-santa-tg#readme",
+  "devDependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/mongoose": "^5.11.97",
+    "@types/node": "^20.10.1",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "eslint": "^8.54.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "mongoose": "^8.0.2",
+    "nodemon": "^3.0.1",
+    "telegraf": "^4.15.2"
+  }
+}
