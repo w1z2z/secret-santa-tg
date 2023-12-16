@@ -1,5 +1,3 @@
-const {TG_TOKEN, MONGO_URI} = require("./config/config");
-
 module.exports = {
   apps: [
     {
@@ -9,11 +7,11 @@ module.exports = {
       ignore_watch: ['node_modules'],
       env: {
         NODE_ENV: 'production',
-        TG_TOKEN: TG_TOKEN,
-        MONGO_URI: MONGO_URI,
+        TG_TOKEN: process.env.TG_TOKEN,
+        MONGO_URI: process.env.MONGO_URI,
       },
     },
   ],
 };
 
-// Запуск - pm2 start ecosystem.config.js
+// Запуск - TG_TOKEN=токен MONGO_URI=ссылка_на_бд pm2 start ecosystem.config.js

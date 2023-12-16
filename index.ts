@@ -54,11 +54,6 @@ bot.on(message('text'), async (ctx: any): Promise<void> => {
       joinExistingGroup(ctx);
       break;
 
-    case 'chooseGiftPrice':
-      // Выбор стоимости подарка
-      giftPriceSelection(ctx);
-      break;
-
     // default:
     //   ctx.reply('Для начала работы выберите 1 из пунктов (Создать/Присоединиться)')
     //   break;
@@ -67,15 +62,7 @@ bot.on(message('text'), async (ctx: any): Promise<void> => {
 
 //Вывод панели выбора цены подарка
 bot.action('finish_entering_participants', async (ctx) => {
-  await ctx.reply('Выберите максимальную стоимость подарка:', Markup.inlineKeyboard([
-    Markup.button.callback('до 500 руб.', '500'),
-    Markup.button.callback('до 1000 руб.', '1000'),
-    Markup.button.callback('до 3000 руб.', '3000'),
-    Markup.button.callback('до 5000 руб.', '5000'),
-    Markup.button.callback('до 10000 руб.', '10000'),
-    Markup.button.callback('Без ограничений.', '0'),
-  ]))
-  updateState({ currentStep: 'saveGroup' })
+  giftPriceSelection(ctx)
 });
 
 //Реакция на выбор цены подарка

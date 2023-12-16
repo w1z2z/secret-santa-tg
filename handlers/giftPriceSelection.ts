@@ -12,5 +12,5 @@ export const giftPriceSelection = async (ctx: Context): Promise<void> => {
     Markup.button.callback('Без ограничений.', '0'),
   ], { columns: 2 }));
 
-  updateState({currentStep: 'saveGroup'})
+  updateState({ currentStep: 'saveGroup' })
 }
