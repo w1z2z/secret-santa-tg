@@ -6,6 +6,11 @@ import {updateState} from "../services";
 export const createGroup = (ctx: Context): void => {
   ctx.reply('Введите название вашей группы 🎅');
 
-  updateState({ currentStep: 'promptParticipants' })
+  updateState({
+    currentStep: 'promptParticipants',
+    newSantaName: '',
+    participantsCount: 0,
+    participants: [],
+  })
 };
 

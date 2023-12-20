@@ -39,7 +39,7 @@ export const saveGroup = async (ctx: any): Promise<void> => {
         code: secretCode
       });
 
-      savedSanta.participants = await Promise.all(getState().participants.map(async (participant: string) => {
+      savedSanta.participants = await Promise.all(state.participants.map(async (participant: string) => {
         const newParticipant= await Participants.create({name: participant, santa: savedSanta._id});
         return newParticipant._id;
       }));
