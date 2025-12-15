@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import {Participants} from "../models";
-import {getRandomParticipant} from "../utils";
+import {getRandomParticipant, getMainMenuKeyboard} from "../utils";
 import {getState, clearState} from "../services";
 
 export const chooseParticipant = async (ctx: any): Promise<void> => {
@@ -24,28 +24,19 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
     return;
   }
 
-  // Используем транзакцию для предотвращения race condition
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    // Находим участника по ID с блокировкой
-    const participant: any = await Participants.findById(participantId)
-      .populate('recipient')
-      .populate('santa')
-      .session(session)
-      .exec();
+    // Используем findOneAndUpdate для атомарной операции без транзакций
+    // Проверяем, что участник еще не привязан или привязан к текущему пользователю
+    const participant: any = await Participants.findOne({
+      _id: participantId,
+      $or: [
+        { telegramAccount: null },
+        { telegramAccount: userId }
+      ]
+    }).populate('recipient').populate('santa').exec();
 
     if (!participant) {
-      await session.abortTransaction();
-      await ctx.reply('Участник не найден');
-      return;
-    }
-
-    // Проверка: участник уже привязан к другому аккаунту
-    if (participant.telegramAccount && participant.telegramAccount !== userId) {
-      await session.abortTransaction();
-      await ctx.reply('Этот участник уже привязан к другому аккаунту');
+      await ctx.reply('Участник не найден или уже привязан к другому аккаунту');
       return;
     }
 
@@ -53,67 +44,104 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
     const existingUserParticipant = await Participants.findOne({
       santa: participant.santa,
       telegramAccount: userId,
-    }).session(session);
+      _id: { $ne: participantId }
+    });
 
-    if (existingUserParticipant && existingUserParticipant._id.toString() !== participantId) {
-      await session.abortTransaction();
+    if (existingUserParticipant) {
       await ctx.reply('Вы уже выбрали другого участника в этой группе');
       return;
     }
 
-    // Привязываем аккаунт Telegram пользователя к участнику
-    participant.telegramAccount = userId;
+    // Атомарно обновляем participant с проверкой, что он еще не привязан
+    const updatedParticipant: any = await Participants.findOneAndUpdate(
+      {
+        _id: participantId,
+        $or: [
+          { telegramAccount: null },
+          { telegramAccount: userId }
+        ]
+      },
+      { telegramAccount: userId },
+      { new: true }
+    ).populate('santa').exec();
+
+    if (!updatedParticipant) {
+      await ctx.reply('Не удалось привязать участника. Попробуйте еще раз.');
+      return;
+    }
 
     // Находим доступных участников (не самих себя, не тех кто уже получил подарок)
-    // Важно: получатель должен быть из всех участников группы, независимо от того присоединился ли он
     const users = await Participants.find({
-      santa: participant.santa,
-      name: { $ne: participant.name },
+      santa: updatedParticipant.santa,
+      name: { $ne: updatedParticipant.name },
       isGifted: false,
-    }).session(session);
+    });
 
     if (users.length === 0) {
-      await session.abortTransaction();
       await ctx.reply('Нет доступных получателей. Подождите, пока все участники присоединятся к группе.');
+      // Откатываем привязку, если нет получателей
+      await Participants.findByIdAndUpdate(participantId, { telegramAccount: null });
       return;
     }
 
     // Выбираем случайного получателя
     const recipient = getRandomParticipant(users);
-    participant.recipient = recipient._id;
+    
+    // Атомарно обновляем участника с получателем и помечаем получателя как "получил подарок"
+    // Используем findOneAndUpdate для атомарности
+    const recipientDoc: any = await Participants.findOneAndUpdate(
+      { _id: recipient._id, isGifted: false },
+      { isGifted: true },
+      { new: true }
+    );
 
-    // Помечаем получателя как "получил подарок" (чтобы другие его не выбрали)
-    const recipientDoc: any = await Participants.findById(recipient._id).session(session);
-    if (recipientDoc) {
-      recipientDoc.isGifted = true;
-      await recipientDoc.save({ session });
+    if (!recipientDoc) {
+      // Получатель уже был выбран другим пользователем, выбираем другого
+      const remainingUsers = await Participants.find({
+        santa: updatedParticipant.santa,
+        name: { $ne: updatedParticipant.name },
+        isGifted: false,
+      });
+
+      if (remainingUsers.length === 0) {
+        await ctx.reply('Нет доступных получателей. Подождите, пока все участники присоединятся к группе.');
+        await Participants.findByIdAndUpdate(participantId, { telegramAccount: null });
+        return;
+      }
+
+      const newRecipient = getRandomParticipant(remainingUsers);
+      await Participants.findByIdAndUpdate(newRecipient._id, { isGifted: true });
+      updatedParticipant.recipient = newRecipient._id;
+    } else {
+      updatedParticipant.recipient = recipientDoc._id;
     }
 
-    await participant.save({ session });
+    await updatedParticipant.save();
 
-    // Подтверждаем транзакцию
-    await session.commitTransaction();
+    const finalParticipant: any = await Participants.findById(participantId)
+      .populate('recipient')
+      .populate('santa')
+      .exec();
 
     await ctx.reply(
-      `Вы присоединились к группе *${participant?.santa?.name}*🎄\n\n` +
-      `Ваше имя - *${participant.name}*👤\n\n` +
-      `Вам нужно подготовить подарок для - *${recipient.name}*🎁\n\n` +
-      `Предполагаемая цена подарка - *${participant.santa.giftPrice === "0" ? 'Без ограничений' : 'до ' + participant.santa.giftPrice + ' руб.'}* 💰`,
-      {parse_mode: "Markdown"}
+      `Вы присоединились к группе *${finalParticipant?.santa?.name}* 🎄\n\n` +
+      `Ваше имя - *${finalParticipant.name}* 👤\n\n` +
+      `Вам нужно подготовить подарок для - *${finalParticipant.recipient.name}* 🎁\n\n` +
+      `Предполагаемая цена подарка - *${finalParticipant.santa.giftPrice === "0" ? 'Без ограничений' : 'до ' + finalParticipant.santa.giftPrice + ' руб.'}* 💰`,
+      {
+        parse_mode: "Markdown",
+        ...getMainMenuKeyboard()
+      }
     );
 
     clearState(userId);
 
   } catch (error: any) {
-    await session.abortTransaction();
-    
     if (error.message && error.message.includes('Массив участников пуст')) {
       await ctx.reply('Нет доступных получателей. Подождите, пока все участники присоединятся к группе.');
     } else {
       await ctx.reply('Произошла ошибка при присоединении участника!');
       console.error('Произошла ошибка при присоединении участника:', error);
     }
-  } finally {
-    await session.endSession();
   }
 }

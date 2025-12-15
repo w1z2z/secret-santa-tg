@@ -1,7 +1,7 @@
 import {Context} from "telegraf";
 
 import {getState, clearState} from "../services";
-import {generateRandomCode} from "../utils";
+import {generateRandomCode, getMainMenuKeyboard} from "../utils";
 import {Participants, Santa} from "../models";
 
 const santaInfo = (newSantaName: string, participants: string[], selectedPrice: string, secretCode: number): string => {
@@ -16,9 +16,9 @@ const santaInfo = (newSantaName: string, participants: string[], selectedPrice: 
 
 Перешлите это сообщение вашим друзьям, чтобы они могли принять участие! 🎁
 
-Всем участникам необходимо присоединиться к группе введя код - *${secretCode}*‼️
+Всем участникам необходимо присоединиться к группе введя код - *${secretCode}* ‼️
 
-Если вы создатель группы и так же принимаете участие, то вам тоже необходимо присоединиться😉
+Если вы создатель группы и так же принимаете участие, то вам тоже необходимо присоединиться 😉
 
 \n
 Ссылка на бота для приглашения друзей: \n[t.me/secret_grandfather_frost_bot](https://t.me/secret_grandfather_frost_bot) 📩
@@ -57,7 +57,10 @@ export const saveGroup = async (ctx: any): Promise<void> => {
     }));
     await savedSanta.save();
 
-    await ctx.reply(santaInfo(state.newSantaName, state.participants, selectedPrice, secretCode), {parse_mode: "Markdown"});
+    await ctx.reply(santaInfo(state.newSantaName, state.participants, selectedPrice, secretCode), {
+      parse_mode: "Markdown",
+      ...getMainMenuKeyboard()
+    });
 
     // const imageUrl: string = 'http://qrcoder.ru/code/?t.me%2Fsecret_grandfather_frost_bot&10&0';
 

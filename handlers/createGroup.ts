@@ -1,6 +1,7 @@
-import { Context, Markup } from 'telegraf';
+import { Context } from 'telegraf';
 
 import {updateState} from "../services";
+import {getHomeButton} from "../utils";
 
 // Ввод названия группы
 export const createGroup = (ctx: Context): void => {
@@ -10,9 +11,7 @@ export const createGroup = (ctx: Context): void => {
     return;
   }
 
-  ctx.reply('Введите название вашей группы 🎅', Markup.keyboard([
-    ['Отменить']
-  ]).resize());
+  ctx.reply('Введите название вашей группы 🎅', getHomeButton());
 
   updateState(userId, {
     currentStep: 'promptParticipants',

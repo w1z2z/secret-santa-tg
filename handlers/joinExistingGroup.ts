@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 
 import {Participants, Santa} from "../models";
 import {getState, updateState, clearState} from "../services";
+import {getHomeButton, getMainMenuKeyboard} from "../utils";
 
 export const joinExistingGroup = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
@@ -16,9 +17,7 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
     
     // Валидация кода
     if (!secretCodeInput) {
-      await ctx.reply('Пожалуйста, введите секретный код', Markup.keyboard([
-        ['Отменить']
-      ]).resize());
+      await ctx.reply('Пожалуйста, введите секретный код', getHomeButton());
       return;
     }
 
@@ -57,7 +56,10 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
         `Цена подарка - *${santa.giftPrice === '0' ? 'Без ограничений' : 'до ' + santa.giftPrice + ' руб.'}* 💰\n\n` +
         `Активные участники - *${activeUserNames || 'нет'}* ✅\n\n` +
         `Неактивные участники - *${inactiveUserNames || 'нет'}* ❌`,
-        {parse_mode: "Markdown"}
+        {
+          parse_mode: "Markdown",
+          ...getMainMenuKeyboard()
+        }
       );
       clearState(userId);
     } else {

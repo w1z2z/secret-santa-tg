@@ -15,7 +15,9 @@ import {
   instruction,
   join,
   start,
-  cancel
+  home,
+  myGroups,
+  showGroupDetails
 } from "./handlers";
 
 //Подключение к БД
@@ -29,11 +31,17 @@ process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 // Обработчики команд
 bot.start(start);
-bot.command('cancel', cancel);
-bot.hears('Отменить', cancel);
-bot.hears('Создать группу', (ctx: Context) => createGroup(ctx));
-bot.hears('Присоединиться к группе', join);
-bot.hears('Инструкция к боту', instruction);
+bot.command('cancel', home);
+bot.hears('🏠 Главное меню', home);
+bot.hears('Главное меню', home);
+bot.hears('🆕 Создать группу', (ctx: Context) => createGroup(ctx));
+bot.hears('Создать группу', (ctx: Context) => createGroup(ctx)); // Для обратной совместимости
+bot.hears('🚪 Присоединиться к группе', join);
+bot.hears('Присоединиться к группе', join); // Для обратной совместимости
+bot.hears('📋 Мои группы', myGroups);
+bot.hears('Мои группы', myGroups); // Для обратной совместимости
+bot.hears('📖 Инструкция к боту', instruction);
+bot.hears('Инструкция к боту', instruction); // Для обратной совместимости
 
 //Выбор действия в зависимости от текущего этапа (шага)
 bot.on(message('text'), async (ctx: any): Promise<void> => {
@@ -84,5 +92,16 @@ bot.action(['500', '1000', '3000', '5000', '10000', '0'], async (ctx) => {
 bot.action(/^join_/, async (ctx) => {
   await chooseParticipant(ctx);
 })
+
+// Реакция на просмотр деталей группы
+bot.action(/^group_/, async (ctx) => {
+  await showGroupDetails(ctx);
+});
+
+// Реакция на кнопку "К списку групп"
+bot.action('my_groups_list', async (ctx) => {
+  await ctx.deleteMessage();
+  await myGroups(ctx);
+});
 
 bot.launch().catch((err) => console.log(err));

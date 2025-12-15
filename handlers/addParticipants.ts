@@ -1,5 +1,6 @@
 import {Markup} from "telegraf";
 import {getState, updateState} from "../services";
+import {getHomeButton} from "../utils";
 
 export const addParticipants = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
@@ -29,9 +30,7 @@ export const addParticipants = async (ctx: any): Promise<void> => {
       Markup.button.callback('Завершить ввод участников', 'finish_entering_participants'),
     ]));
   } else {
-    await ctx.reply(`Введите имя следующего участника (добавлено: ${updatedParticipants.length}, минимум: 3):`, Markup.keyboard([
-      ['Отменить']
-    ]).resize());
+    await ctx.reply(`Введите имя следующего участника (добавлено: ${updatedParticipants.length}, минимум: 3):`, getHomeButton());
   }
 
   updateState(userId, { participants: updatedParticipants, participantsCount: updatedParticipants.length });
