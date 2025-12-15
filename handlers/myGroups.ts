@@ -26,11 +26,13 @@ export const myGroups = async (ctx: Context): Promise<void> => {
     }
 
     // Формируем список групп с кнопками
-    const groupButtons = userParticipants.map((participant: any, index: number) => {
-      const santa = participant.santa;
-      const groupTitle = `${index + 1}. ${santa.name}${participant.recipient ? ' ✅' : ''}`;
-      return [Markup.button.callback(groupTitle, `group_${participant._id}`)];
-    });
+    const groupButtons = userParticipants
+      .filter((participant: any) => participant.santa) // Фильтруем участников с валидной группой
+      .map((participant: any, index: number) => {
+        const santa = participant.santa;
+        const groupTitle = `${index + 1}. ${santa.name}${participant.recipient ? ' ✅' : ''}`;
+        return [Markup.button.callback(groupTitle, `group_${participant._id}`)];
+      });
 
     await ctx.reply(
       `*Ваши группы 🎄*\n\nВыберите группу для просмотра деталей:`,

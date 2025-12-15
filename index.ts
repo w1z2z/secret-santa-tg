@@ -21,7 +21,9 @@ import {
   whoIsMySanta,
   setDeadline,
   enterDeadline,
-  handleCalendar
+  handleCalendar,
+  promptCustomPrice,
+  enterCustomPrice
 } from "./handlers";
 
 //Подключение к БД
@@ -76,6 +78,11 @@ bot.on(message('text'), async (ctx: any): Promise<void> => {
       await joinExistingGroup(ctx);
       break;
 
+    case 'enterCustomPrice':
+      // Ввод своей суммы подарка
+      await enterCustomPrice(ctx);
+      break;
+
     // default:
     //   ctx.reply('Для начала работы выберите 1 из пунктов (Создать/Присоединиться)')
     //   break;
@@ -90,6 +97,11 @@ bot.action('finish_entering_participants', async (ctx) => {
 //Реакция на выбор цены подарка
 bot.action(['500', '1000', '3000', '5000', '10000', '0'], async (ctx) => {
   await setDeadline(ctx);
+});
+
+//Реакция на кнопку "Ввести свою сумму"
+bot.action('custom_price', async (ctx) => {
+  await promptCustomPrice(ctx);
 });
 
 //Реакция на кнопку Присоединиться

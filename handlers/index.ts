@@ -14,4 +14,5 @@ export * from './myGroups';
 export * from './whoIsMySanta';
 export * from './setDeadline';
 export * from './handleCalendar';
+export * from './enterCustomPrice';
 

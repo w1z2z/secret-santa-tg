@@ -24,7 +24,8 @@ export const giftPriceSelection = async (ctx: Context): Promise<void> => {
     Markup.button.callback('до 3000 руб.', '3000'),
     Markup.button.callback('до 5000 руб.', '5000'),
     Markup.button.callback('до 10000 руб.', '10000'),
-    Markup.button.callback('Без ограничений.', '0'),
+    Markup.button.callback('Без ограничений', '0'),
+    Markup.button.callback('💵 Ввести свою сумму', 'custom_price'),
   ], { columns: 2 }));
 
   // После выбора цены переходим к вводу дедлайна

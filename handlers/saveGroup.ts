@@ -82,8 +82,8 @@ export const saveGroup = async (ctx: any): Promise<void> => {
           'сентября': 8, 'октября': 9, 'ноября': 10, 'декабря': 11
         };
         
-        // Парсим формат "15 декабря 2024 г."
-        const ruFormatMatch = state.deadline.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/);
+        // Парсим формат "15 декабря 2024 г." или "15 декабря 2024"
+        const ruFormatMatch = state.deadline.match(/(\d{1,2})\s+(\w+)\s+(\d{4})(?:\s+г\.?)?/);
         console.log('ruFormatMatch:', ruFormatMatch);
         if (ruFormatMatch) {
           const day = parseInt(ruFormatMatch[1]);
@@ -130,6 +130,15 @@ export const saveGroup = async (ctx: any): Promise<void> => {
     console.log('Итоговый deadlineDate:', deadlineDate);
 
     console.log('Создание Santa в БД...');
+    console.log('Данные для сохранения Santa:', {
+      name: state.newSantaName,
+      giftPrice: selectedPrice,
+      code: secretCode,
+      deadline: deadlineDate,
+      deadlineType: typeof deadlineDate,
+      deadlineIsValid: deadlineDate instanceof Date ? 'valid Date' : 'not a Date'
+    });
+    
     const savedSanta = await Santa.create({
       name: state.newSantaName,
       giftPrice: selectedPrice,
@@ -137,6 +146,7 @@ export const saveGroup = async (ctx: any): Promise<void> => {
       deadline: deadlineDate
     });
     console.log('Santa создан, _id:', savedSanta._id);
+    console.log('Сохраненный deadline в БД:', savedSanta.deadline);
 
     console.log('Создание участников, количество:', state.participants?.length);
     savedSanta.participants = await Promise.all(state.participants.map(async (participant: string) => {
