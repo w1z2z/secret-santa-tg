@@ -14,7 +14,8 @@ import {
   createGroup,
   instruction,
   join,
-  start
+  start,
+  cancel
 } from "./handlers";
 
 //Подключение к БД
@@ -28,6 +29,8 @@ process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 // Обработчики команд
 bot.start(start);
+bot.command('cancel', cancel);
+bot.hears('Отменить', cancel);
 bot.hears('Создать группу', (ctx: Context) => createGroup(ctx));
 bot.hears('Присоединиться к группе', join);
 bot.hears('Инструкция к боту', instruction);
@@ -40,6 +43,9 @@ bot.on(message('text'), async (ctx: any): Promise<void> => {
     return;
   }
 
+  // Проверка на кнопку "Отменить" уже обрабатывается через bot.hears выше
+  // Здесь обрабатываем только текстовые сообщения для активных процессов
+  
   const state = getState(userId);
   
   switch (state.currentStep) {

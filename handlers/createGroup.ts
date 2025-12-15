@@ -1,4 +1,4 @@
-import { Context } from 'telegraf';
+import { Context, Markup } from 'telegraf';
 
 import {updateState} from "../services";
 
@@ -10,7 +10,9 @@ export const createGroup = (ctx: Context): void => {
     return;
   }
 
-  ctx.reply('Введите название вашей группы 🎅');
+  ctx.reply('Введите название вашей группы 🎅', Markup.keyboard([
+    ['Отменить']
+  ]).resize());
 
   updateState(userId, {
     currentStep: 'promptParticipants',

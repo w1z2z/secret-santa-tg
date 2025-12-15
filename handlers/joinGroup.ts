@@ -1,4 +1,4 @@
-import { Context } from 'telegraf';
+import { Context, Markup } from 'telegraf';
 import {updateState} from "../services";
 
 export const join = (ctx: Context): void => {
@@ -8,6 +8,8 @@ export const join = (ctx: Context): void => {
     return;
   }
 
-  ctx.reply('Для присоединения к группе введите секретный код "Дед-Мороза" 🎅');
+  ctx.reply('Для присоединения к группе введите секретный код "Дед-Мороза" 🎅', Markup.keyboard([
+    ['Отменить']
+  ]).resize());
   updateState(userId, { currentStep: 'joinExistingGroup' })
 };

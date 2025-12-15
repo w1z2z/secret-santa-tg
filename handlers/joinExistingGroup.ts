@@ -16,7 +16,9 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
     
     // Валидация кода
     if (!secretCodeInput) {
-      await ctx.reply('Пожалуйста, введите секретный код');
+      await ctx.reply('Пожалуйста, введите секретный код', Markup.keyboard([
+        ['Отменить']
+      ]).resize());
       return;
     }
 

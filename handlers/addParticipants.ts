@@ -29,7 +29,9 @@ export const addParticipants = async (ctx: any): Promise<void> => {
       Markup.button.callback('Завершить ввод участников', 'finish_entering_participants'),
     ]));
   } else {
-    await ctx.reply(`Введите имя следующего участника (добавлено: ${updatedParticipants.length}, минимум: 3):`);
+    await ctx.reply(`Введите имя следующего участника (добавлено: ${updatedParticipants.length}, минимум: 3):`, Markup.keyboard([
+      ['Отменить']
+    ]).resize());
   }
 
   updateState(userId, { participants: updatedParticipants, participantsCount: updatedParticipants.length });
