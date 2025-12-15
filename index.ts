@@ -17,7 +17,8 @@ import {
   start,
   home,
   myGroups,
-  showGroupDetails
+  showGroupDetails,
+  whoIsMySanta
 } from "./handlers";
 
 //Подключение к БД
@@ -102,6 +103,11 @@ bot.action(/^group_/, async (ctx) => {
 bot.action('my_groups_list', async (ctx) => {
   await ctx.deleteMessage();
   await myGroups(ctx);
+});
+
+// Реакция на кнопку "Узнать кто мой Дед-Мороз"
+bot.action(/^santa_/, async (ctx) => {
+  await whoIsMySanta(ctx);
 });
 
 bot.launch().catch((err) => console.log(err));

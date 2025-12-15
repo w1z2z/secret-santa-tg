@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import {Markup} from "telegraf";
 import {Participants} from "../models";
 import {getRandomParticipant, getMainMenuKeyboard} from "../utils";
 import {getState, clearState} from "../services";
@@ -130,9 +131,14 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
       `Предполагаемая цена подарка - *${finalParticipant.santa.giftPrice === "0" ? 'Без ограничений' : 'до ' + finalParticipant.santa.giftPrice + ' руб.'}* 💰`,
       {
         parse_mode: "Markdown",
-        ...getMainMenuKeyboard()
+        reply_markup: Markup.inlineKeyboard([
+          [Markup.button.callback('🎅 Узнать кто мой Дед-Мороз?', `santa_${finalParticipant._id}`)]
+        ]).reply_markup
       }
     );
+
+    // Отправляем главное меню отдельным сообщением
+    await ctx.reply('Выберите действие:', getMainMenuKeyboard());
 
     clearState(userId);
 

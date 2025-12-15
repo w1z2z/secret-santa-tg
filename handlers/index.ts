@@ -11,4 +11,5 @@ export * from './start';
 export * from './cancel';
 export { home } from './cancel';
 export * from './myGroups';
+export * from './whoIsMySanta';
 
