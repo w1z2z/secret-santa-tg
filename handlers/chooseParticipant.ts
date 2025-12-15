@@ -124,6 +124,13 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
       .populate('santa')
       .exec();
 
+    // Удаляем сообщение со списком участников перед показом результата
+    try {
+      await ctx.deleteMessage();
+    } catch (e) {
+      // Игнорируем ошибку, если сообщение уже удалено
+    }
+
     let deadlineText = '';
     if (finalParticipant.santa.deadline) {
       const deadlineDate = new Date(finalParticipant.santa.deadline);

@@ -13,6 +13,13 @@ export const setDeadline = async (ctx: any): Promise<void> => {
   const selectedPrice = ctx.match[0];
   updateState(userId, { giftPrice: selectedPrice, currentStep: 'selectDeadline' });
 
+  // Удаляем сообщение с выбором цены перед показом календаря
+  try {
+    await ctx.deleteMessage();
+  } catch (e) {
+    // Игнорируем ошибку, если сообщение уже удалено
+  }
+
   await ctx.reply(
     '📅 Выберите дату в декабре, когда нужно подарить подарки (дедлайн)',
     getCurrentMonthCalendar()

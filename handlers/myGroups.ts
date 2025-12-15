@@ -105,12 +105,25 @@ export const showGroupDetails = async (ctx: any): Promise<void> => {
 
     message += `*Участники группы:*\n${participantNames}`;
 
-    await ctx.editMessageText(message, {
-      parse_mode: "Markdown",
-      reply_markup: Markup.inlineKeyboard([
-        [Markup.button.callback('🔙 К списку групп', 'my_groups_list')]
-      ]).reply_markup
-    });
+    // Удаляем старое сообщение перед показом деталей
+    try {
+      await ctx.deleteMessage();
+      // Отправляем детали как новое сообщение
+      await ctx.reply(message, {
+        parse_mode: "Markdown",
+        reply_markup: Markup.inlineKeyboard([
+          [Markup.button.callback('🔙 К списку групп', 'my_groups_list')]
+        ]).reply_markup
+      });
+    } catch (e) {
+      // Если не удалось удалить, используем editMessageText
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: Markup.inlineKeyboard([
+          [Markup.button.callback('🔙 К списку групп', 'my_groups_list')]
+        ]).reply_markup
+      });
+    }
 
     await ctx.answerCbQuery();
 

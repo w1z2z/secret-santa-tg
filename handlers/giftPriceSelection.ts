@@ -9,6 +9,15 @@ export const giftPriceSelection = async (ctx: Context): Promise<void> => {
     return;
   }
 
+  // Удаляем старое сообщение (если это action handler)
+  try {
+    if (ctx.callbackQuery) {
+      await ctx.deleteMessage();
+    }
+  } catch (e) {
+    // Игнорируем ошибку, если это не inline сообщение
+  }
+
   await ctx.reply('Выберите максимальную стоимость подарка:', Markup.inlineKeyboard([
     Markup.button.callback('до 500 руб.', '500'),
     Markup.button.callback('до 1000 руб.', '1000'),

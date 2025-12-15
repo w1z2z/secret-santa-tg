@@ -104,7 +104,11 @@ bot.action(/^group_/, async (ctx) => {
 
 // Реакция на кнопку "К списку групп"
 bot.action('my_groups_list', async (ctx) => {
-  await ctx.deleteMessage();
+  try {
+    await ctx.deleteMessage();
+  } catch (e) {
+    // Игнорируем ошибку удаления
+  }
   await myGroups(ctx);
 });
 
