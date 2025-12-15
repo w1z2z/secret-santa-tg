@@ -8,6 +8,8 @@ const getDefaultState = (): IBotState => ({
   newSantaName: '',
   participantsCount: 0,
   participants: [],
+  giftPrice: undefined,
+  deadline: undefined,
 });
 
 export const updateState = (userId: number, newState: Partial<IBotState>): void => {

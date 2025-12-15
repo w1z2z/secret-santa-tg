@@ -72,11 +72,11 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
     }
 
     // Находим доступных участников (не самих себя, не тех кто уже получил подарок)
-    const users = await Participants.find({
+        const users = await Participants.find({
       santa: updatedParticipant.santa,
       name: { $ne: updatedParticipant.name },
       isGifted: false,
-    });
+        });
 
     if (users.length === 0) {
       await ctx.reply('Нет доступных получателей. Подождите, пока все участники присоединятся к группе.');
@@ -87,7 +87,7 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
 
     // Выбираем случайного получателя
     const recipient = getRandomParticipant(users);
-    
+
     // Атомарно обновляем участника с получателем и помечаем получателя как "получил подарок"
     // Используем findOneAndUpdate для атомарности
     const recipientDoc: any = await Participants.findOneAndUpdate(
@@ -124,11 +124,23 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
       .populate('santa')
       .exec();
 
-    await ctx.reply(
+    let deadlineText = '';
+    if (finalParticipant.santa.deadline) {
+      const deadlineDate = new Date(finalParticipant.santa.deadline);
+      const formattedDeadline = deadlineDate.toLocaleDateString('ru-RU', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+      deadlineText = `Дедлайн - *${formattedDeadline}* 📅\n\n`;
+    }
+
+        await ctx.reply(
       `Вы присоединились к группе *${finalParticipant?.santa?.name}* 🎄\n\n` +
       `Ваше имя - *${finalParticipant.name}* 👤\n\n` +
       `Вам нужно подготовить подарок для - *${finalParticipant.recipient.name}* 🎁\n\n` +
-      `Предполагаемая цена подарка - *${finalParticipant.santa.giftPrice === "0" ? 'Без ограничений' : 'до ' + finalParticipant.santa.giftPrice + ' руб.'}* 💰`,
+      `Предполагаемая цена подарка - *${finalParticipant.santa.giftPrice === "0" ? 'Без ограничений' : 'до ' + finalParticipant.santa.giftPrice + ' руб.'}* 💰\n\n` +
+      deadlineText,
       {
         parse_mode: "Markdown",
         reply_markup: Markup.inlineKeyboard([

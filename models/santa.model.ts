@@ -4,6 +4,7 @@ const SantaSchema = new mongoose.Schema({
   name: { type: String, required: true },
   giftPrice: { type: String, required: true },
   code: { type: Number, required: true, unique: true, index: true },
+  deadline: { type: Date, default: null },
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Participants' }]
 });
 

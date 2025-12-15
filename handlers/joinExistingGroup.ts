@@ -49,11 +49,23 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
       const activeUserNames = activeUsers.map((user: any) => user.name).join(', ');
       const inactiveUserNames = inactiveUsers.map((user: any) => user.name).join(', ');
 
+      let deadlineText = '';
+      if (santa.deadline) {
+        const deadlineDate = new Date(santa.deadline);
+        const formattedDeadline = deadlineDate.toLocaleDateString('ru-RU', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        });
+        deadlineText = `Дедлайн - *${formattedDeadline}* 📅\n\n`;
+      }
+
       await ctx.reply(
         `Вы уже участвуете в группе - *${santa.name}* 🎄\n\n` +
         `Ваше имя - *${existingUser.name}* 👤\n\n` +
         `Вам нужно подготовить подарок для - *${existingUser.recipient?.name}* 🎁\n\n` +
         `Цена подарка - *${santa.giftPrice === '0' ? 'Без ограничений' : 'до ' + santa.giftPrice + ' руб.'}* 💰\n\n` +
+        deadlineText +
         `Активные участники - *${activeUserNames || 'нет'}* ✅\n\n` +
         `Неактивные участники - *${inactiveUserNames || 'нет'}* ❌`,
         {

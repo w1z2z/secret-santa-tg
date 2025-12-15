@@ -3,4 +3,6 @@ export interface IBotState {
   newSantaName: string;
   participantsCount: number;
   participants: string[];
+  giftPrice?: string;
+  deadline?: string;
 }

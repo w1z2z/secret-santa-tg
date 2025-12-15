@@ -12,4 +12,6 @@ export * from './cancel';
 export { home } from './cancel';
 export * from './myGroups';
 export * from './whoIsMySanta';
+export * from './setDeadline';
+export * from './handleCalendar';
 

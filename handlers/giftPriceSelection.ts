@@ -1,5 +1,5 @@
 import {Context, Markup} from "telegraf";
-
+import {getHomeButton} from "../utils";
 import {updateState} from "../services";
 
 export const giftPriceSelection = async (ctx: Context): Promise<void> => {
@@ -18,5 +18,6 @@ export const giftPriceSelection = async (ctx: Context): Promise<void> => {
     Markup.button.callback('Без ограничений.', '0'),
   ], { columns: 2 }));
 
-  updateState(userId, { currentStep: 'saveGroup' })
+  // После выбора цены переходим к вводу дедлайна
+  // Но сначала нужно сохранить выбранную цену
 }

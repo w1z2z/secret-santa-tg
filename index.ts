@@ -18,7 +18,10 @@ import {
   home,
   myGroups,
   showGroupDetails,
-  whoIsMySanta
+  whoIsMySanta,
+  setDeadline,
+  enterDeadline,
+  handleCalendar
 } from "./handlers";
 
 //Подключение к БД
@@ -86,7 +89,7 @@ bot.action('finish_entering_participants', async (ctx) => {
 
 //Реакция на выбор цены подарка
 bot.action(['500', '1000', '3000', '5000', '10000', '0'], async (ctx) => {
-  await saveGroup(ctx);
+  await setDeadline(ctx);
 });
 
 //Реакция на кнопку Присоединиться
@@ -108,6 +111,11 @@ bot.action('my_groups_list', async (ctx) => {
 // Реакция на кнопку "Узнать кто мой Дед-Мороз"
 bot.action(/^santa_/, async (ctx) => {
   await whoIsMySanta(ctx);
+});
+
+// Реакция на действия календаря
+bot.action(/^cal_/, async (ctx) => {
+  await handleCalendar(ctx);
 });
 
 bot.launch().catch((err) => console.log(err));

@@ -85,6 +85,15 @@ export const showGroupDetails = async (ctx: any): Promise<void> => {
     }
 
     message += `*Цена подарка:* ${santa.giftPrice === '0' ? 'Без ограничений' : 'до ' + santa.giftPrice + ' руб.'} 💰\n\n`;
+    if (santa.deadline) {
+      const deadlineDate = new Date(santa.deadline);
+      const formattedDeadline = deadlineDate.toLocaleDateString('ru-RU', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+      message += `*Дедлайн:* ${formattedDeadline} 📅\n\n`;
+    }
     message += `*Код группы:* \`${santa.code}\` 🔑\n\n`;
     message += `*Статус:* ${activeCount}/${totalCount} участников присоединилось ✅\n\n`;
 
