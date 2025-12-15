@@ -70,7 +70,9 @@ export const saveGroup = async (ctx: any): Promise<void> => {
 
     // Парсим дедлайн в Date, если это возможно, иначе оставляем null
     console.log('Парсинг дедлайна. state.deadline:', state.deadline);
+    console.log('Тип state.deadline:', typeof state.deadline);
     let deadlineDate: Date | null = null;
+    
     if (state.deadline) {
       try {
         console.log('Попытка парсинга дедлайна:', state.deadline);
@@ -83,51 +85,80 @@ export const saveGroup = async (ctx: any): Promise<void> => {
         };
         
         // Парсим формат "15 декабря 2024 г." или "15 декабря 2024"
-        const ruFormatMatch = state.deadline.match(/(\d{1,2})\s+(\w+)\s+(\d{4})(?:\s+г\.?)?/);
-        console.log('ruFormatMatch:', ruFormatMatch);
-        if (ruFormatMatch) {
-          const day = parseInt(ruFormatMatch[1]);
-          const monthName = ruFormatMatch[2];
-          const year = parseInt(ruFormatMatch[3]);
-          const month = monthNames[monthName];
-          console.log(`Парсинг: day=${day}, monthName=${monthName}, month=${month}, year=${year}`);
+        const cleanedDeadline = state.deadline.trim();
+        console.log('Очищенный дедлайн:', cleanedDeadline);
+        console.log('Длина дедлайна:', cleanedDeadline.length);
+        
+        // Разбиваем строку по пробелам
+        const parts = cleanedDeadline.split(/\s+/);
+        console.log('Части дедлайна:', parts);
+        
+        if (parts.length >= 3) {
+          // Формат: ["15", "декабря", "2024", "г."] или ["15", "декабря", "2024"]
+          const dayStr = parts[0];
+          const monthName = parts[1].toLowerCase().replace(/[.,]/g, ''); // убираем точки и запятые
+          const yearStr = parts[2].replace(/[.,г]/g, ''); // убираем точки, запятые и "г"
           
-          if (month !== undefined) {
+          const day = parseInt(dayStr);
+          const year = parseInt(yearStr);
+          const month = monthNames[monthName];
+          
+          console.log(`Парсинг: day=${day}, monthName="${monthName}", month=${month}, year=${year}`);
+          
+          if (!isNaN(day) && !isNaN(year) && month !== undefined) {
             deadlineDate = new Date(year, month, day);
+            // Устанавливаем время на начало дня
+            deadlineDate.setHours(0, 0, 0, 0);
             console.log('deadlineDate создан (русский формат):', deadlineDate);
+            console.log('deadlineDate ISO:', deadlineDate.toISOString());
           } else {
-            console.error('Неизвестное название месяца:', monthName);
+            console.error('Ошибка парсинга: day=', day, 'month=', month, 'year=', year);
+            console.error('Доступные месяцы:', Object.keys(monthNames));
           }
         } else {
           // Пробуем стандартный парсинг
           console.log('Попытка стандартного парсинга');
-          let parsed = Date.parse(state.deadline);
+          let parsed = Date.parse(cleanedDeadline);
           if (!isNaN(parsed)) {
             deadlineDate = new Date(parsed);
+            deadlineDate.setHours(0, 0, 0, 0);
             console.log('deadlineDate создан (стандартный парсинг):', deadlineDate);
           } else {
             // Пробуем формат DD.MM.YYYY
             console.log('Попытка парсинга формата DD.MM.YYYY');
-            const dotFormatMatch = state.deadline.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+            const dotFormatMatch = cleanedDeadline.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
             if (dotFormatMatch) {
               const day = parseInt(dotFormatMatch[1]);
               const month = parseInt(dotFormatMatch[2]) - 1; // месяц с 0
               const year = parseInt(dotFormatMatch[3]);
               deadlineDate = new Date(year, month, day);
+              deadlineDate.setHours(0, 0, 0, 0);
               console.log('deadlineDate создан (DD.MM.YYYY):', deadlineDate);
             } else {
               console.error('Не удалось распарсить дедлайн в любом формате');
+              console.error('Пробуем альтернативный regex...');
+              // Альтернативная попытка - просто ищем числа
+              const numbersMatch = cleanedDeadline.match(/(\d{1,2}).*?(\d{4})/);
+              if (numbersMatch) {
+                console.error('Найдены числа, но формат не распознан:', numbersMatch);
+              }
             }
           }
         }
       } catch (e) {
         console.error('Ошибка при парсинге даты дедлайна:', e);
+        if (e instanceof Error) {
+          console.error('Стек ошибки:', e.stack);
+        }
         // Оставляем deadlineDate = null, сохраним как есть
       }
     } else {
-      console.log('Дедлайн не указан');
+      console.log('Дедлайн не указан в состоянии');
     }
+    
     console.log('Итоговый deadlineDate:', deadlineDate);
+    console.log('deadlineDate тип:', typeof deadlineDate);
+    console.log('deadlineDate instanceof Date:', deadlineDate instanceof Date);
 
     console.log('Создание Santa в БД...');
     console.log('Данные для сохранения Santa:', {
