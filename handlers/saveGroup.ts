@@ -1,9 +1,8 @@
 import {Context} from "telegraf";
 
-import {getState, updateState} from "../services";
+import {getState, clearState} from "../services";
 import {generateRandomCode} from "../utils";
 import {Participants, Santa} from "../models";
-import {IBotState} from "../interfaces";
 
 const santaInfo = (newSantaName: string, participants: string[], selectedPrice: string, secretCode: number): string => {
   return `
@@ -27,42 +26,48 @@ const santaInfo = (newSantaName: string, participants: string[], selectedPrice: 
 }
 
 export const saveGroup = async (ctx: any): Promise<void> => {
-  if (getState().currentStep === 'saveGroup') {
-    const selectedPrice = ctx.match[0];
-    const secretCode: number = generateRandomCode();
-    const state: IBotState = getState();
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.reply('Ошибка: не удалось определить пользователя');
+    return;
+  }
 
-    try {
-      const savedSanta = await Santa.create({
-        name: getState().newSantaName,
-        giftPrice: selectedPrice,
-        code: secretCode
-      });
+  const state = getState(userId);
+  
+  if (state.currentStep !== 'saveGroup') {
+    await ctx.reply('Неверный шаг. Начните заново с команды /start');
+    return;
+  }
 
-      savedSanta.participants = await Promise.all(state.participants.map(async (participant: string) => {
-        const newParticipant= await Participants.create({name: participant, santa: savedSanta._id});
-        return newParticipant._id;
-      }));
-      await savedSanta.save();
+  const selectedPrice = ctx.match[0];
+  
+  try {
+    // Генерируем уникальный код
+    const secretCode: number = await generateRandomCode();
 
-      ctx.reply(santaInfo(state.newSantaName, state.participants, selectedPrice, secretCode), {parse_mode: "Markdown"});
+    const savedSanta = await Santa.create({
+      name: state.newSantaName,
+      giftPrice: selectedPrice,
+      code: secretCode
+    });
 
-      // const imageUrl: string = 'http://qrcoder.ru/code/?t.me%2Fsecret_grandfather_frost_bot&10&0';
+    savedSanta.participants = await Promise.all(state.participants.map(async (participant: string) => {
+      const newParticipant = await Participants.create({name: participant, santa: savedSanta._id});
+      return newParticipant._id;
+    }));
+    await savedSanta.save();
 
-      // await ctx.replyWithPhoto(imageUrl, {
-      //   caption: 'Так же можете поделиться QR-кодом для доступа к боту',
-      // });
+    await ctx.reply(santaInfo(state.newSantaName, state.participants, selectedPrice, secretCode), {parse_mode: "Markdown"});
 
+    // const imageUrl: string = 'http://qrcoder.ru/code/?t.me%2Fsecret_grandfather_frost_bot&10&0';
 
-      updateState({
-        currentStep: 'newSanta',
-        newSantaName: '',
-        participantsCount: 0,
-        participants: [],
-      })
-    } catch (e) {
-      console.error('Произошла ошибка при создании группы:', e);
-      ctx.reply('Произошла ошибка при создании Деда-Мороза');
-    }
+    // await ctx.replyWithPhoto(imageUrl, {
+    //   caption: 'Так же можете поделиться QR-кодом для доступа к боту',
+    // });
+
+    clearState(userId);
+  } catch (e) {
+    console.error('Произошла ошибка при создании группы:', e);
+    await ctx.reply('Произошла ошибка при создании Деда-Мороза. Попробуйте позже.');
   }
 }

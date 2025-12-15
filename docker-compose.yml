@@ -22,25 +22,25 @@ services:
       retries: 5
       start_period: 10s
 
-  bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: secret-santa-bot
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      TG_TOKEN: ${TG_TOKEN}
-      MONGO_URI: ${MONGO_URI}
-      MONGO_HOST: ${MONGO_HOST:-db}
-      MONGO_PORT: ${MONGO_PORT:-27017}
-      MONGO_USERNAME: ${MONGO_USERNAME}
-      MONGO_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_DATABASE: ${MONGO_DATABASE:-secret-santa}
-    networks:
-      - secret-santa-network
+  # bot:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: secret-santa-bot
+  #   restart: unless-stopped
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   environment:
+  #     TG_TOKEN: ${TG_TOKEN}
+  #     MONGO_URI: ${MONGO_URI}
+  #     MONGO_HOST: ${MONGO_HOST:-db}
+  #     MONGO_PORT: ${MONGO_PORT:-27017}
+  #     MONGO_USERNAME: ${MONGO_USERNAME}
+  #     MONGO_PASSWORD: ${MONGO_PASSWORD}
+  #     MONGO_DATABASE: ${MONGO_DATABASE:-secret-santa}
+  #   networks:
+  #     - secret-santa-network
 
 volumes:
   mongo_data:

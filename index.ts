@@ -3,7 +3,7 @@ import {message} from "telegraf/filters";
 
 import config from "./config/config";
 import connectDB from "./config/database";
-import {getState, initializeState, updateState} from "./services";
+import {getState} from "./services";
 import {
   saveGroup,
   joinExistingGroup,
@@ -22,13 +22,9 @@ connectDB();
 
 const bot: Telegraf<Context> = new Telegraf(config.TG_TOKEN);
 
-initializeState({
-  currentStep: 'newSanta',
-  newSantaName: '',
-  participantsCount: 0,
-  participants: [],
-});
-
+// Graceful shutdown
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 // Обработчики команд
 bot.start(start);
@@ -38,20 +34,28 @@ bot.hears('Инструкция к боту', instruction);
 
 //Выбор действия в зависимости от текущего этапа (шага)
 bot.on(message('text'), async (ctx: any): Promise<void> => {
-  switch (getState().currentStep) {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.reply('Ошибка: не удалось определить пользователя');
+    return;
+  }
+
+  const state = getState(userId);
+  
+  switch (state.currentStep) {
     case 'promptParticipants':
       //Предложить ввести участников
-      promptParticipants(ctx)
+      await promptParticipants(ctx);
       break;
 
     case 'addParticipants':
       // Добавления участников в группу
-      addParticipants(ctx);
+      await addParticipants(ctx);
       break;
 
     case 'joinExistingGroup':
       // Этап присоединения к существующей группе
-      joinExistingGroup(ctx);
+      await joinExistingGroup(ctx);
       break;
 
     // default:
@@ -62,17 +66,17 @@ bot.on(message('text'), async (ctx: any): Promise<void> => {
 
 //Вывод панели выбора цены подарка
 bot.action('finish_entering_participants', async (ctx) => {
-  giftPriceSelection(ctx)
+  await giftPriceSelection(ctx);
 });
 
 //Реакция на выбор цены подарка
 bot.action(['500', '1000', '3000', '5000', '10000', '0'], async (ctx) => {
-  saveGroup(ctx);
+  await saveGroup(ctx);
 });
 
 //Реакция на кнопку Присоединиться
 bot.action(/^join_/, async (ctx) => {
-  chooseParticipant(ctx);
+  await chooseParticipant(ctx);
 })
 
 bot.launch().catch((err) => console.log(err));

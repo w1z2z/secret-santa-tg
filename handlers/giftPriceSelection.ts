@@ -3,6 +3,12 @@ import {Context, Markup} from "telegraf";
 import {updateState} from "../services";
 
 export const giftPriceSelection = async (ctx: Context): Promise<void> => {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.reply('Ошибка: не удалось определить пользователя');
+    return;
+  }
+
   await ctx.reply('Выберите максимальную стоимость подарка:', Markup.inlineKeyboard([
     Markup.button.callback('до 500 руб.', '500'),
     Markup.button.callback('до 1000 руб.', '1000'),
@@ -12,5 +18,5 @@ export const giftPriceSelection = async (ctx: Context): Promise<void> => {
     Markup.button.callback('Без ограничений.', '0'),
   ], { columns: 2 }));
 
-  updateState({ currentStep: 'saveGroup' })
+  updateState(userId, { currentStep: 'saveGroup' })
 }

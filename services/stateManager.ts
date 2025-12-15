@@ -1,16 +1,28 @@
 import {IBotState} from "../interfaces";
 
-let state: IBotState;
+// Хранилище состояний по userId
+const userStates = new Map<number, IBotState>();
 
-export const updateState = (newState: Partial<IBotState>): void => {
-  state = { ...state, ...newState };
+const getDefaultState = (): IBotState => ({
+  currentStep: 'newSanta',
+  newSantaName: '',
+  participantsCount: 0,
+  participants: [],
+});
+
+export const updateState = (userId: number, newState: Partial<IBotState>): void => {
+  const currentState = userStates.get(userId) || getDefaultState();
+  userStates.set(userId, { ...currentState, ...newState });
 };
 
-export const getState = (): IBotState => {
-  return { ...state };
+export const getState = (userId: number): IBotState => {
+  return userStates.get(userId) || getDefaultState();
 };
 
-export const initializeState = (initialState: IBotState): void => {
-  state = { ...initialState };
+export const clearState = (userId: number): void => {
+  userStates.set(userId, getDefaultState());
 };
 
+export const initializeState = (userId: number, initialState?: Partial<IBotState>): void => {
+  userStates.set(userId, { ...getDefaultState(), ...initialState });
+};

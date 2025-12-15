@@ -1,15 +1,38 @@
 import {Context, Markup} from "telegraf";
+import mongoose from "mongoose";
 
 import {Participants, Santa} from "../models";
-import {getState, updateState} from "../services";
+import {getState, updateState, clearState} from "../services";
 
 export const joinExistingGroup = async (ctx: any): Promise<void> => {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.reply('Ошибка: не удалось определить пользователя');
+    return;
+  }
+
   try {
-    const secretCode = ctx.message.text; // Получение введенного секретного кода
-    const santa = await Santa.findOne({ code: secretCode }).populate('participants'); // Поиск группы по коду
+    const secretCodeInput = ctx.message?.text?.trim();
+    
+    // Валидация кода
+    if (!secretCodeInput) {
+      await ctx.reply('Пожалуйста, введите секретный код');
+      return;
+    }
+
+    const secretCode = parseInt(secretCodeInput, 10);
+    
+    // Проверка, что код - валидное число
+    if (isNaN(secretCode) || secretCode < 100000 || secretCode > 999999) {
+      await ctx.reply('Неверный формат кода. Код должен быть числом из 6 цифр (от 100000 до 999999)');
+      return;
+    }
+
+    const santa = await Santa.findOne({ code: secretCode }).populate('participants');
 
     if (!santa) {
-      await ctx.reply('Группа по указанному коду не найдена'); // Уведомление об отсутствии группы по коду
+      await ctx.reply('Группа по указанному коду не найдена');
+      clearState(userId);
       return;
     }
 
@@ -17,8 +40,8 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
     const inactiveUsers = santa.participants.filter((user: any) => user.telegramAccount === null);
 
     const existingUser: any = await Participants.findOne({
-      santa: santa._id, // Поиск участника в группе
-      telegramAccount: ctx.from?.id,
+      santa: santa._id,
+      telegramAccount: userId,
     }).populate('recipient');
 
     if (existingUser) {
@@ -30,14 +53,14 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
         `Ваше имя - *${existingUser.name}* 👤\n\n` +
         `Вам нужно подготовить подарок для - *${existingUser.recipient?.name}* 🎁\n\n` +
         `Цена подарка - *${santa.giftPrice === '0' ? 'Без ограничений' : 'до ' + santa.giftPrice + ' руб.'}* 💰\n\n` +
-        `Активные участники - *${activeUserNames}* ✅\n\n` +
-        `Неактивные участники - *${inactiveUserNames}* ❌`,
+        `Активные участники - *${activeUserNames || 'нет'}* ✅\n\n` +
+        `Неактивные участники - *${inactiveUserNames || 'нет'}* ❌`,
         {parse_mode: "Markdown"}
       );
-      // Уведомление участника о его участии в группе и подготовке подарка
+      clearState(userId);
     } else {
       const participants = await Participants.find({
-        santa: santa._id, // Поиск доступных участников в группе
+        santa: santa._id,
         telegramAccount: null,
       });
 
@@ -48,18 +71,17 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
 
         await ctx.reply('Выберите себя из списка участников группы:',
           Markup.inlineKeyboard(participantButtons, { columns: 5 })
-        )
+        );
 
-        updateState({ currentStep: 'chooseParticipant' })
+        updateState(userId, { currentStep: 'chooseParticipant' });
       } else {
         await ctx.reply('Нет доступных участников');
-        updateState({ currentStep: 'newSanta' })
-
+        clearState(userId);
       }
     }
   } catch (error) {
     await ctx.reply('Произошла ошибка при поиске группы');
     console.error('Произошла ошибка при поиске группы:', error);
-    updateState({ currentStep: 'newSanta' })
+    clearState(userId);
   }
 };

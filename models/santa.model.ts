@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
 const SantaSchema = new mongoose.Schema({
-  name: String,
-  giftPrice: String,
-  code: Number,
+  name: { type: String, required: true },
+  giftPrice: { type: String, required: true },
+  code: { type: Number, required: true, unique: true, index: true },
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Participants' }]
 });
 
