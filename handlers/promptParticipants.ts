@@ -1,16 +1,19 @@
 import {Context} from "telegraf";
 
 import { updateState, getState} from "../services";
-import {getHomeButton} from "../utils";
+import {getHomeButton, logger} from "../utils";
 
 export const promptParticipants = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
   if (!userId) {
+    logger.error('PROMPT_PARTICIPANTS', 'userId не определен');
     await ctx.reply('Ошибка: не удалось определить пользователя');
     return;
   }
 
   const state = getState(userId);
+  const groupName = ctx.message?.text?.trim();
+  logger.info('PROMPT_PARTICIPANTS', `Пользователь ${userId} ввел название группы: "${groupName}"`);
 
   // Удаляем предыдущее сообщение бота
   try {

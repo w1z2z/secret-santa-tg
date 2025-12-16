@@ -1,16 +1,18 @@
 import {Markup} from "telegraf";
 import {getState, updateState} from "../services";
-import {getHomeButton, getMainMenuKeyboard} from "../utils";
+import {getHomeButton, getMainMenuKeyboard, logger} from "../utils";
 
 export const addParticipants = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
   if (!userId) {
+    logger.error('ADD_PARTICIPANTS', 'userId не определен');
     await ctx.reply('Ошибка: не удалось определить пользователя');
     return;
   }
 
   const currentState = getState(userId);
   const newParticipant = ctx.message?.text?.trim();
+  logger.info('ADD_PARTICIPANTS', `Пользователь ${userId} добавил участника: "${newParticipant}"`);
 
   // Удаляем сообщение пользователя с именем участника
   try {
@@ -28,11 +30,13 @@ export const addParticipants = async (ctx: any): Promise<void> => {
 
   // Проверка на дубликаты
   if (currentState.participants.includes(newParticipant)) {
+    logger.info('ADD_PARTICIPANTS', `Попытка добавить дубликат участника "${newParticipant}"`);
     await ctx.reply(`Участник "${newParticipant}" уже добавлен. Введите другое имя.`);
     return;
   }
 
   const updatedParticipants = [...currentState.participants, newParticipant];
+  logger.info('ADD_PARTICIPANTS', `Всего участников: ${updatedParticipants.length}`);
 
   // Удаляем предыдущее сообщение бота
   try {

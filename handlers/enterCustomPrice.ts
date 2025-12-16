@@ -1,14 +1,17 @@
 import {Context} from "telegraf";
 import {getState, updateState} from "../services";
-import {getHomeButton} from "../utils";
+import {getHomeButton, logger} from "../utils";
 import {setDeadline} from "./setDeadline";
 
 export const promptCustomPrice = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
   if (!userId) {
+    logger.error('PROMPT_CUSTOM_PRICE', 'userId не определен');
     await ctx.reply('Ошибка: не удалось определить пользователя');
     return;
   }
+
+  logger.info('PROMPT_CUSTOM_PRICE', `Пользователь ${userId} выбрал ввод своей суммы`);
 
   // Удаляем старое сообщение с выбором цены
   try {
@@ -44,11 +47,13 @@ export const promptCustomPrice = async (ctx: any): Promise<void> => {
 export const enterCustomPrice = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
   if (!userId) {
+    logger.error('ENTER_CUSTOM_PRICE', 'userId не определен');
     await ctx.reply('Ошибка: не удалось определить пользователя');
     return;
   }
 
   const priceText = ctx.message?.text?.trim();
+  logger.info('ENTER_CUSTOM_PRICE', `Пользователь ${userId} ввел цену: "${priceText}"`);
   
   // Удаляем сообщение пользователя с суммой
   try {
@@ -67,10 +72,13 @@ export const enterCustomPrice = async (ctx: any): Promise<void> => {
   // Валидация: проверяем, что это число
   const priceNumber = parseInt(priceText);
   if (isNaN(priceNumber) || priceNumber < 0) {
+    logger.info('ENTER_CUSTOM_PRICE', `Некорректная цена введена: "${priceText}"`);
     await ctx.reply('❌ Пожалуйста, введите корректное число (например: 1500)', getHomeButton());
     return;
   }
 
+  logger.info('ENTER_CUSTOM_PRICE', `Цена сохранена: ${priceNumber} руб.`);
+  
   // Сохраняем цену
   updateState(userId, { 
     giftPrice: priceNumber.toString(), 

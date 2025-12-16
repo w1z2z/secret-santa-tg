@@ -1,13 +1,16 @@
 import {Context, Markup} from "telegraf";
-import {getHomeButton, getMainMenuKeyboard} from "../utils";
+import {getHomeButton, getMainMenuKeyboard, logger} from "../utils";
 import {updateState, getState} from "../services";
 
 export const giftPriceSelection = async (ctx: Context): Promise<void> => {
   const userId = ctx.from?.id;
   if (!userId) {
+    logger.error('GIFT_PRICE_SELECTION', 'userId не определен');
     await ctx.reply('Ошибка: не удалось определить пользователя');
     return;
   }
+
+  logger.info('GIFT_PRICE_SELECTION', `Пользователь ${userId} перешел к выбору цены подарка`);
 
   // Удаляем старое сообщение (если это action handler)
   try {

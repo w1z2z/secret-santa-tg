@@ -1,4 +1,5 @@
 import { Context } from 'telegraf';
+import {logger} from "../utils";
 
 const rulesText = `
 *Создать свою группу 🎄:*
@@ -22,5 +23,9 @@ const rulesText = `
 `;
 
 export const instruction = (ctx: Context): void => {
+  const userId = ctx.from?.id;
+  if (userId) {
+    logger.info('INSTRUCTION', `Пользователь ${userId} запросил инструкцию`);
+  }
   ctx.reply(rulesText, {parse_mode: "Markdown"});
 };

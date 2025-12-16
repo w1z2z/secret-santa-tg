@@ -1,12 +1,16 @@
 import {Context} from "telegraf";
 import {Participants} from "../models";
+import {logger} from "../utils";
 
 export const whoIsMySanta = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
   if (!userId) {
+    logger.error('WHO_IS_MY_SANTA', 'userId не определен');
     await ctx.reply('Ошибка: не удалось определить пользователя');
     return;
   }
+
+  logger.info('WHO_IS_MY_SANTA', `Пользователь ${userId} пытается узнать своего Деда-Мороза`);
 
   try {
     const participantId = ctx.match.input.split('_')[1];
@@ -34,7 +38,7 @@ export const whoIsMySanta = async (ctx: any): Promise<void> => {
     await ctx.answerCbQuery(randomMessage, { show_alert: true });
 
   } catch (error) {
-    console.error('Ошибка при обработке запроса:', error);
+    logger.error('WHO_IS_MY_SANTA', 'Ошибка при обработке запроса', error);
     await ctx.answerCbQuery('Что-то пошло не так 🤷‍♂️');
   }
 };

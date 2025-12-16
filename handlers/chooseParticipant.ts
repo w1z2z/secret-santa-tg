@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import {Markup} from "telegraf";
 import {Participants} from "../models";
-import {getRandomParticipant, getMainMenuKeyboard} from "../utils";
+import {getRandomParticipant, getMainMenuKeyboard, logger} from "../utils";
 import {getState, clearState} from "../services";
 
 export const chooseParticipant = async (ctx: any): Promise<void> => {
@@ -176,7 +176,7 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
       await ctx.reply('Нет доступных получателей. Подождите, пока все участники присоединятся к группе.');
     } else {
       await ctx.reply('Произошла ошибка при присоединении участника!');
-      console.error('Произошла ошибка при присоединении участника:', error);
+      logger.error('CHOOSE_PARTICIPANT', 'Ошибка при присоединении участника', error);
     }
   }
 }

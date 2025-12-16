@@ -3,17 +3,19 @@ import mongoose from "mongoose";
 
 import {Participants, Santa} from "../models";
 import {getState, updateState, clearState} from "../services";
-import {getHomeButton, getMainMenuKeyboard} from "../utils";
+import {getHomeButton, getMainMenuKeyboard, logger} from "../utils";
 
 export const joinExistingGroup = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
   if (!userId) {
+    logger.error('JOIN_EXISTING_GROUP', 'userId не определен');
     await ctx.reply('Ошибка: не удалось определить пользователя');
     return;
   }
 
   try {
     const secretCodeInput = ctx.message?.text?.trim();
+    logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userId} пытается присоединиться с кодом: ${secretCodeInput}`);
     
     // Удаляем сообщение пользователя с кодом группы
     try {
@@ -41,10 +43,13 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
     const santa = await Santa.findOne({ code: secretCode }).populate('participants');
 
     if (!santa) {
+      logger.info('JOIN_EXISTING_GROUP', `Группа с кодом ${secretCode} не найдена`);
       await ctx.reply('Группа по указанному коду не найдена');
       clearState(userId);
       return;
     }
+    
+    logger.info('JOIN_EXISTING_GROUP', `Найдена группа "${santa.name}" с кодом ${secretCode}`);
 
     const activeUsers = santa.participants.filter((user: any) => user.telegramAccount !== null);
     const inactiveUsers = santa.participants.filter((user: any) => user.telegramAccount === null);
@@ -55,6 +60,7 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
     }).populate('recipient');
 
     if (existingUser) {
+      logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userId} уже участвует в группе "${santa.name}"`);
       const activeUserNames = activeUsers.map((user: any) => user.name).join(', ');
       const inactiveUserNames = inactiveUsers.map((user: any) => user.name).join(', ');
 
@@ -98,15 +104,17 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
           Markup.inlineKeyboard(participantButtons, { columns: 5 })
         );
 
+        logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userId} выбирает участника из группы "${santa.name}"`);
         updateState(userId, { currentStep: 'chooseParticipant' });
       } else {
+        logger.info('JOIN_EXISTING_GROUP', `Нет доступных участников в группе "${santa.name}"`);
         await ctx.reply('Нет доступных участников');
         clearState(userId);
       }
     }
   } catch (error) {
+    logger.error('JOIN_EXISTING_GROUP', 'Ошибка при поиске группы', error);
     await ctx.reply('Произошла ошибка при поиске группы');
-    console.error('Произошла ошибка при поиске группы:', error);
     clearState(userId);
   }
 };

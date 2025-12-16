@@ -1,7 +1,7 @@
 import {Context} from "telegraf";
 
 import {getState, clearState} from "../services";
-import {generateRandomCode, getMainMenuKeyboard} from "../utils";
+import {generateRandomCode, getMainMenuKeyboard, logger} from "../utils";
 import {Participants, Santa} from "../models";
 
 const santaInfo = (newSantaName: string, participants: string[], selectedPrice: string, secretCode: number, deadline?: string): string => {
@@ -27,55 +27,36 @@ const santaInfo = (newSantaName: string, participants: string[], selectedPrice: 
 }
 
 export const saveGroup = async (ctx: any): Promise<void> => {
-  console.log('=== saveGroup ВЫЗВАН ===');
   const userId = ctx.from?.id;
-  console.log('userId в saveGroup:', userId);
   
   if (!userId) {
-    console.error('Ошибка: userId не определен в saveGroup');
+    logger.error('SAVE_GROUP', 'userId не определен');
     await ctx.reply('Ошибка: не удалось определить пользователя');
     return;
   }
 
-  console.log('Получение состояния для userId:', userId);
   const state = getState(userId);
-  console.log('Состояние получено:', JSON.stringify(state, null, 2));
-  console.log('currentStep:', state.currentStep);
   
   if (state.currentStep !== 'saveGroup') {
-    console.error('ОШИБКА: неверный шаг. Ожидался saveGroup, получен:', state.currentStep);
+    logger.error('SAVE_GROUP', `Неверный шаг. Ожидался saveGroup, получен: ${state.currentStep}`);
     await ctx.reply('Неверный шаг. Начните заново с команды /start');
     return;
   }
 
   const selectedPrice = ctx.match?.[0] || state.giftPrice || '0';
-  console.log('selectedPrice:', selectedPrice);
-  console.log('ctx.match:', ctx.match);
-  console.log('state.giftPrice:', state.giftPrice);
   
-  console.log('Данные для сохранения в БД:', {
-    name: state.newSantaName,
-    participantsCount: state.participants?.length,
-    participants: state.participants,
-    giftPrice: selectedPrice,
-    deadline: state.deadline
-  });
+  logger.info('SAVE_GROUP', `Начало сохранения группы "${state.newSantaName}", участников: ${state.participants?.length}, цена: ${selectedPrice} руб.`);
   
   try {
-    console.log('Начало try блока в saveGroup');
     // Генерируем уникальный код
-    console.log('Генерация уникального кода...');
     const secretCode: number = await generateRandomCode();
-    console.log('Сгенерирован код:', secretCode);
+    logger.info('SAVE_GROUP', `Сгенерирован код группы: ${secretCode}`);
 
     // Парсим дедлайн в Date, если это возможно, иначе оставляем null
-    console.log('Парсинг дедлайна. state.deadline:', state.deadline);
-    console.log('Тип state.deadline:', typeof state.deadline);
     let deadlineDate: Date | null = null;
     
     if (state.deadline) {
       try {
-        console.log('Попытка парсинга дедлайна:', state.deadline);
         // Формат из календаря: "15 декабря 2024 г."
         // Пробуем распарсить русский формат
         const monthNames: { [key: string]: number } = {
@@ -86,12 +67,9 @@ export const saveGroup = async (ctx: any): Promise<void> => {
         
         // Парсим формат "15 декабря 2024 г." или "15 декабря 2024"
         const cleanedDeadline = state.deadline.trim();
-        console.log('Очищенный дедлайн:', cleanedDeadline);
-        console.log('Длина дедлайна:', cleanedDeadline.length);
         
         // Разбиваем строку по пробелам
         const parts = cleanedDeadline.split(/\s+/);
-        console.log('Части дедлайна:', parts);
         
         if (parts.length >= 3) {
           // Формат: ["15", "декабря", "2024", "г."] или ["15", "декабря", "2024"]
@@ -103,29 +81,21 @@ export const saveGroup = async (ctx: any): Promise<void> => {
           const year = parseInt(yearStr);
           const month = monthNames[monthName];
           
-          console.log(`Парсинг: day=${day}, monthName="${monthName}", month=${month}, year=${year}`);
-          
           if (!isNaN(day) && !isNaN(year) && month !== undefined) {
             deadlineDate = new Date(year, month, day);
             // Устанавливаем время на начало дня
             deadlineDate.setHours(0, 0, 0, 0);
-            console.log('deadlineDate создан (русский формат):', deadlineDate);
-            console.log('deadlineDate ISO:', deadlineDate.toISOString());
           } else {
-            console.error('Ошибка парсинга: day=', day, 'month=', month, 'year=', year);
-            console.error('Доступные месяцы:', Object.keys(monthNames));
+            logger.error('SAVE_GROUP', `Ошибка парсинга дедлайна: day=${day}, month=${month}, year=${year}`);
           }
         } else {
           // Пробуем стандартный парсинг
-          console.log('Попытка стандартного парсинга');
           let parsed = Date.parse(cleanedDeadline);
           if (!isNaN(parsed)) {
             deadlineDate = new Date(parsed);
             deadlineDate.setHours(0, 0, 0, 0);
-            console.log('deadlineDate создан (стандартный парсинг):', deadlineDate);
           } else {
             // Пробуем формат DD.MM.YYYY
-            console.log('Попытка парсинга формата DD.MM.YYYY');
             const dotFormatMatch = cleanedDeadline.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
             if (dotFormatMatch) {
               const day = parseInt(dotFormatMatch[1]);
@@ -133,42 +103,14 @@ export const saveGroup = async (ctx: any): Promise<void> => {
               const year = parseInt(dotFormatMatch[3]);
               deadlineDate = new Date(year, month, day);
               deadlineDate.setHours(0, 0, 0, 0);
-              console.log('deadlineDate создан (DD.MM.YYYY):', deadlineDate);
-            } else {
-              console.error('Не удалось распарсить дедлайн в любом формате');
-              console.error('Пробуем альтернативный regex...');
-              // Альтернативная попытка - просто ищем числа
-              const numbersMatch = cleanedDeadline.match(/(\d{1,2}).*?(\d{4})/);
-              if (numbersMatch) {
-                console.error('Найдены числа, но формат не распознан:', numbersMatch);
-              }
             }
           }
         }
       } catch (e) {
-        console.error('Ошибка при парсинге даты дедлайна:', e);
-        if (e instanceof Error) {
-          console.error('Стек ошибки:', e.stack);
-        }
+        logger.error('SAVE_GROUP', 'Ошибка при парсинге даты дедлайна', e);
         // Оставляем deadlineDate = null, сохраним как есть
       }
-    } else {
-      console.log('Дедлайн не указан в состоянии');
     }
-    
-    console.log('Итоговый deadlineDate:', deadlineDate);
-    console.log('deadlineDate тип:', typeof deadlineDate);
-    console.log('deadlineDate instanceof Date:', deadlineDate instanceof Date);
-
-    console.log('Создание Santa в БД...');
-    console.log('Данные для сохранения Santa:', {
-      name: state.newSantaName,
-      giftPrice: selectedPrice,
-      code: secretCode,
-      deadline: deadlineDate,
-      deadlineType: typeof deadlineDate,
-      deadlineIsValid: deadlineDate instanceof Date ? 'valid Date' : 'not a Date'
-    });
     
     const savedSanta = await Santa.create({
       name: state.newSantaName,
@@ -176,25 +118,15 @@ export const saveGroup = async (ctx: any): Promise<void> => {
       code: secretCode,
       deadline: deadlineDate
     });
-    console.log('Santa создан, _id:', savedSanta._id);
-    console.log('Сохраненный deadline в БД:', savedSanta.deadline);
 
-    console.log('Создание участников, количество:', state.participants?.length);
     savedSanta.participants = await Promise.all(state.participants.map(async (participant: string) => {
-      console.log('Создание участника:', participant);
       const newParticipant = await Participants.create({name: participant, santa: savedSanta._id});
-      console.log('Участник создан, _id:', newParticipant._id);
       return newParticipant._id;
     }));
-    console.log('Все участники созданы');
     
-    console.log('Сохранение Santa с участниками...');
     await savedSanta.save();
-    console.log('Santa сохранен');
 
-    console.log('Формирование сообщения для отправки...');
     const messageText = santaInfo(state.newSantaName, state.participants, selectedPrice, secretCode, state.deadline);
-    console.log('Текст сообщения подготовлен, длина:', messageText.length);
     
     // Удаляем предыдущее сообщение с меню (если есть)
     try {
@@ -205,15 +137,12 @@ export const saveGroup = async (ctx: any): Promise<void> => {
       // Игнорируем ошибку
     }
 
-    console.log('Отправка сообщения пользователю...');
     await ctx.reply(messageText, {
       parse_mode: "Markdown"
     });
-    console.log('Сообщение отправлено');
     
     // Отправляем отдельное сообщение для установки reply keyboard (кнопки над полем ввода)
     await ctx.reply('✨', getMainMenuKeyboard());
-    console.log('Главное меню отправлено');
 
       // const imageUrl: string = 'http://qrcoder.ru/code/?t.me%2Fsecret_grandfather_frost_bot&10&0';
 
@@ -221,23 +150,13 @@ export const saveGroup = async (ctx: any): Promise<void> => {
       //   caption: 'Так же можете поделиться QR-кодом для доступа к боту',
       // });
 
-    console.log('Очистка состояния...');
     clearState(userId);
-    console.log('Группа успешно создана, код:', secretCode);
-    console.log('=== saveGroup ЗАВЕРШЕН УСПЕШНО ===');
   } catch (e) {
-    console.error('=== ОШИБКА В saveGroup ===');
-    console.error('Произошла ошибка при создании группы:', e);
-    if (e instanceof Error) {
-      console.error('Тип ошибки:', e.constructor.name);
-      console.error('Сообщение ошибки:', e.message);
-      console.error('Стек ошибки:', e.stack);
-    }
+    logger.error('SAVE_GROUP', 'Ошибка при создании группы', e);
     try {
       await ctx.reply('Произошла ошибка при создании Деда-Мороза. Попробуйте позже.');
-      console.log('Сообщение об ошибке отправлено пользователю');
     } catch (replyError) {
-      console.error('Не удалось отправить сообщение об ошибке:', replyError);
+      logger.error('SAVE_GROUP', 'Не удалось отправить сообщение об ошибке', replyError);
     }
   }
 }
