@@ -43,11 +43,7 @@ docker compose logs -f bot
 ### ⚡ Все в одной команде
 
 ```bash
-cd /bots/secret-santa-tg && \
-git pull && \
-docker compose build bot && \
-docker compose up -d bot && \
-docker compose logs -f bot
+cd /bots/secret-santa-tg && git pull && docker compose build bot && docker compose up -d bot && docker compose logs -f bot
 ```
 
 ---
