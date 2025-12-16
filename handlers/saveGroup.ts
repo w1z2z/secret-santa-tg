@@ -5,24 +5,26 @@ import {generateRandomCode, getMainMenuKeyboard, logger} from "../utils";
 import {Participants, Santa} from "../models";
 
 const santaInfo = (newSantaName: string, participants: string[], selectedPrice: string, secretCode: number, deadline?: string): string => {
-  const deadlineText = deadline ? `\nДедлайн:* ${deadline}* 📅\n` : '';
+  const deadlineText = deadline ? `\nДедлайн: *${deadline}* 📅` : '';
 
-  return `
-*Тайный Санта 🎅*
+  return `*Тайный Санта 🎅*
 
-Название группы:* ${newSantaName}* 🎄
+*Информация о группе:*
+Название: *${newSantaName}* 🎄
+Участники: *${participants.join(', ')}* 👥
+Цена подарка: *${selectedPrice === "0" ? 'Без ограничений' : 'до ' + selectedPrice + ' руб.'}* 💰${deadlineText}
 
-Участники:* ${participants.join(', ')}* 👥
+*Как присоединиться:*
+1️⃣ Нажмите на ссылку: [Присоединиться к группе](https://t.me/secret_grandfather_frost_bot?start=${secretCode}) 📩
+2️⃣ Или перейдите в бота, нажмите кнопку "Присоединиться к группе" и введите код: \`${secretCode}\` 🔑 (нажмите на код чтобы его скопировать!)
 
-Цена подарка:* ${selectedPrice === "0" ? 'Без ограничений' : 'до ' + selectedPrice + ' руб.'}* 💰${deadlineText}
+*Важно:*
 Перешлите это сообщение вашим друзьям, чтобы они могли принять участие! 🎁
 
-Всем участникам необходимо присоединиться к группе введя код - \`${secretCode}\` 🔑 (нажмите на код чтобы его скопировать!) ‼️
-
-Если вы создатель группы и так же принимаете участие, то вам тоже необходимо присоединиться 😉
-
-\n
-Ссылка на бота для приглашения друзей: \n[t.me/secret_grandfather_frost_bot](https://t.me/secret_grandfather_frost_bot) 📩
+━━━━━━━━━━━━━━━━━━━━
+⚠️ *ВНИМАНИЕ СОЗДАТЕЛЮ ГРУППЫ:*
+Если вы создатель группы и тоже принимаете участие, вам тоже необходимо присоединиться! 😉
+━━━━━━━━━━━━━━━━━━━━
   `;
 }
 
