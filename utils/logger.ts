@@ -46,9 +46,15 @@ const writeToFile = (message: string, error?: any) => {
   try {
     const logsDir = path.join(process.cwd(), 'logs');
     
-    // Создаем папку logs если её нет
+    // Создаем папку logs если её нет (с обработкой ошибок прав доступа)
     if (!fs.existsSync(logsDir)) {
-      fs.mkdirSync(logsDir, { recursive: true });
+      try {
+        fs.mkdirSync(logsDir, { recursive: true });
+      } catch (mkdirErr: any) {
+        // Если не удалось создать папку (например, нет прав), просто пропускаем запись в файл
+        // Лог уже выведен в консоль, это не критично
+        return;
+      }
     }
     
     const fileName = `${formatDateForFileName()}.log`;
@@ -62,14 +68,12 @@ const writeToFile = (message: string, error?: any) => {
     logEntry += '\n';
     
     // Асинхронная запись в файл (неблокирующая)
-    fs.appendFile(filePath, logEntry, (err) => {
-      if (err) {
-        console.error('Ошибка записи в лог-файл:', err);
-      }
+    fs.appendFile(filePath, logEntry, () => {
+      // Тихо игнорируем ошибки записи - лог уже в консоли
     });
   } catch (err) {
     // Игнорируем ошибки записи в файл, чтобы не сломать работу бота
-    console.error('Ошибка при записи лога в файл:', err);
+    // Лог уже выведен в консоль
   }
 };
 
