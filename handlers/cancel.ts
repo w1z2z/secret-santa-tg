@@ -1,6 +1,6 @@
 import {Context} from "telegraf";
 import {clearState} from "../services";
-import {getMainMenuKeyboard, logger} from "../utils";
+import {getMainMenuKeyboard, logger, getUserIdentifier} from "../utils";
 
 export const home = async (ctx: Context): Promise<void> => {
   const userId = ctx.from?.id;
@@ -10,7 +10,8 @@ export const home = async (ctx: Context): Promise<void> => {
     return;
   }
 
-  logger.info('HOME', `Пользователь ${userId} вернулся в главное меню`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('HOME', `Пользователь ${userIdentifier} вернулся в главное меню`);
   clearState(userId);
   
   await ctx.reply(

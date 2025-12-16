@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 import {Participants, Santa} from "../models";
 import {getState, updateState, clearState} from "../services";
-import {getHomeButton, getMainMenuKeyboard, logger} from "../utils";
+import {getHomeButton, getMainMenuKeyboard, logger, getUserIdentifier} from "../utils";
 
 export const joinExistingGroup = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
@@ -15,7 +15,8 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
 
   try {
     const secretCodeInput = ctx.message?.text?.trim();
-    logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userId} пытается присоединиться с кодом: ${secretCodeInput}`);
+    const userIdentifier = getUserIdentifier(ctx.from);
+    logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userIdentifier} пытается присоединиться с кодом: ${secretCodeInput}`);
     
     // Удаляем сообщение пользователя с кодом группы
     try {
@@ -43,7 +44,7 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
     const santa = await Santa.findOne({ code: secretCode }).populate('participants');
 
     if (!santa) {
-      logger.info('JOIN_EXISTING_GROUP', `Группа с кодом ${secretCode} не найдена`);
+      logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userIdentifier}: Группа с кодом ${secretCode} не найдена`);
       await ctx.reply('Группа по указанному коду не найдена');
       clearState(userId);
       return;
@@ -60,7 +61,7 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
     }).populate('recipient');
 
     if (existingUser) {
-      logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userId} уже участвует в группе "${santa.name}"`);
+      logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userIdentifier} уже участвует в группе "${santa.name}"`);
       const activeUserNames = activeUsers.map((user: any) => user.name).join(', ');
       const inactiveUserNames = inactiveUsers.map((user: any) => user.name).join(', ');
 
@@ -104,10 +105,10 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
           Markup.inlineKeyboard(participantButtons, { columns: 5 })
         );
 
-        logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userId} выбирает участника из группы "${santa.name}"`);
+        logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userIdentifier} выбирает участника из группы "${santa.name}"`);
         updateState(userId, { currentStep: 'chooseParticipant' });
       } else {
-        logger.info('JOIN_EXISTING_GROUP', `Нет доступных участников в группе "${santa.name}"`);
+        logger.info('JOIN_EXISTING_GROUP', `Пользователь ${userIdentifier}: Нет доступных участников в группе "${santa.name}"`);
         await ctx.reply('Нет доступных участников');
         clearState(userId);
       }

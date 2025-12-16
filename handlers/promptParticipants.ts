@@ -1,7 +1,7 @@
 import {Context} from "telegraf";
 
 import { updateState, getState} from "../services";
-import {getHomeButton, logger} from "../utils";
+import {getHomeButton, logger, getUserIdentifier} from "../utils";
 
 export const promptParticipants = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
@@ -13,7 +13,8 @@ export const promptParticipants = async (ctx: any): Promise<void> => {
 
   const state = getState(userId);
   const groupName = ctx.message?.text?.trim();
-  logger.info('PROMPT_PARTICIPANTS', `Пользователь ${userId} ввел название группы: "${groupName}"`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('PROMPT_PARTICIPANTS', `Пользователь ${userIdentifier} ввел название группы: "${groupName}"`);
 
   // Удаляем предыдущее сообщение бота
   try {

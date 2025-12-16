@@ -1,6 +1,6 @@
 import {Context} from "telegraf";
 import {Participants} from "../models";
-import {logger} from "../utils";
+import {logger, getUserIdentifier} from "../utils";
 
 export const whoIsMySanta = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
@@ -10,7 +10,8 @@ export const whoIsMySanta = async (ctx: any): Promise<void> => {
     return;
   }
 
-  logger.info('WHO_IS_MY_SANTA', `Пользователь ${userId} пытается узнать своего Деда-Мороза`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('WHO_IS_MY_SANTA', `Пользователь ${userIdentifier} пытается узнать своего Деда-Мороза`);
 
   try {
     const participantId = ctx.match.input.split('_')[1];

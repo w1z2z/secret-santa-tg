@@ -1,5 +1,5 @@
 import {Context, Markup} from "telegraf";
-import {logger, getHomeButton} from "../utils";
+import {logger, getHomeButton, getUserIdentifier} from "../utils";
 import {Santa} from "../models";
 import {updateState} from "../services";
 
@@ -20,7 +20,8 @@ export const start = async (ctx: Context) => {
     const secretCode = parseInt(startPayload, 10);
     
     if (!isNaN(secretCode) && secretCode >= 100000 && secretCode <= 999999) {
-      logger.info('START', `Пользователь ${userId} перешел по deep link с кодом: ${secretCode}`);
+      const userIdentifier = getUserIdentifier(ctx.from);
+      logger.info('START', `Пользователь ${userIdentifier} перешел по deep link с кодом: ${secretCode}`);
       
       // Проверяем, существует ли группа с таким кодом
       const santa = await Santa.findOne({ code: secretCode }).populate('participants');
@@ -54,13 +55,15 @@ export const start = async (ctx: Context) => {
         }
         return;
       } else {
-        logger.info('START', `Группа с кодом ${secretCode} не найдена`);
+        const userIdentifier = getUserIdentifier(ctx.from);
+        logger.info('START', `Пользователь ${userIdentifier}: Группа с кодом ${secretCode} не найдена`);
         await ctx.reply(`Группа с кодом ${secretCode} не найдена. Проверьте правильность кода.`, getHomeButton());
       }
     }
   }
   
-  logger.info('START', `Пользователь ${userId} запустил бота`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('START', `Пользователь ${userIdentifier} запустил бота`);
   
   return ctx.reply('Привет! Я "Тайный Дед-Мороз"! 🎅\n\nПеред использованием прочтите инструкцию! 😉', Markup.keyboard([
     ['🆕 Создать группу', '🚪 Присоединиться к группе'],

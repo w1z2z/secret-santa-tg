@@ -1,5 +1,5 @@
 import {Context, Markup} from "telegraf";
-import {getHomeButton, getMainMenuKeyboard, logger} from "../utils";
+import {getHomeButton, getMainMenuKeyboard, logger, getUserIdentifier} from "../utils";
 import {updateState, getState} from "../services";
 
 export const giftPriceSelection = async (ctx: Context): Promise<void> => {
@@ -10,7 +10,8 @@ export const giftPriceSelection = async (ctx: Context): Promise<void> => {
     return;
   }
 
-  logger.info('GIFT_PRICE_SELECTION', `Пользователь ${userId} перешел к выбору цены подарка`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('GIFT_PRICE_SELECTION', `Пользователь ${userIdentifier} перешел к выбору цены подарка`);
 
   // Удаляем старое сообщение (если это action handler)
   try {

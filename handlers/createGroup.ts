@@ -1,7 +1,7 @@
 import { Context } from 'telegraf';
 
 import {updateState} from "../services";
-import {getHomeButton, logger} from "../utils";
+import {getHomeButton, logger, getUserIdentifier} from "../utils";
 
 // Ввод названия группы
 export const createGroup = async (ctx: Context): Promise<void> => {
@@ -12,7 +12,8 @@ export const createGroup = async (ctx: Context): Promise<void> => {
     return;
   }
 
-  logger.info('CREATE_GROUP', `Пользователь ${userId} начал создание группы`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('CREATE_GROUP', `Пользователь ${userIdentifier} начал создание группы`);
 
   const sentMessage = await ctx.reply('Введите название вашей группы 🎅', getHomeButton());
 

@@ -1,6 +1,6 @@
 import { Context } from 'telegraf';
 import {updateState} from "../services";
-import {getHomeButton, logger} from "../utils";
+import {getHomeButton, logger, getUserIdentifier} from "../utils";
 
 export const join = (ctx: Context): void => {
   const userId = ctx.from?.id;
@@ -10,7 +10,8 @@ export const join = (ctx: Context): void => {
     return;
   }
 
-  logger.info('JOIN_GROUP', `Пользователь ${userId} начал процесс присоединения к группе`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('JOIN_GROUP', `Пользователь ${userIdentifier} начал процесс присоединения к группе`);
   ctx.reply('Для присоединения к группе введите секретный код "Дед-Мороза" 🎅', getHomeButton());
   updateState(userId, { currentStep: 'joinExistingGroup' })
 };

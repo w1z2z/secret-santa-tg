@@ -1,6 +1,6 @@
 import {Context, Markup} from "telegraf";
 import {Participants, Santa} from "../models";
-import {logger} from "../utils";
+import {logger, getUserIdentifier} from "../utils";
 
 export const myGroups = async (ctx: Context): Promise<void> => {
   const userId = ctx.from?.id;
@@ -41,7 +41,8 @@ export const myGroups = async (ctx: Context): Promise<void> => {
     );
 
   } catch (error) {
-    logger.error('MY_GROUPS', 'Ошибка при получении списка групп', error);
+    const userIdentifier = getUserIdentifier(ctx.from);
+    logger.error('MY_GROUPS', `Пользователь ${userIdentifier}: Ошибка при получении списка групп`, error);
     await ctx.reply('Произошла ошибка при загрузке ваших групп. Попробуйте позже.');
   }
 };
@@ -131,7 +132,8 @@ export const showGroupDetails = async (ctx: any): Promise<void> => {
     await ctx.answerCbQuery();
 
   } catch (error) {
-    logger.error('SHOW_GROUP_DETAILS', 'Ошибка при получении деталей группы', error);
+    const userIdentifier = getUserIdentifier(ctx.from);
+    logger.error('SHOW_GROUP_DETAILS', `Пользователь ${userIdentifier}: Ошибка при получении деталей группы`, error);
     await ctx.answerCbQuery('Произошла ошибка при загрузке информации о группе');
   }
 };

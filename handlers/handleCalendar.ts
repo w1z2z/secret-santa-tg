@@ -1,6 +1,6 @@
 import {Context} from "telegraf";
 import {updateState, getState} from "../services";
-import {logger} from "../utils";
+import {logger, getUserIdentifier} from "../utils";
 
 export const handleCalendar = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
@@ -13,7 +13,8 @@ export const handleCalendar = async (ctx: any): Promise<void> => {
 
   // Получаем callback data правильно - используем match.input как в других обработчиках
   const callbackData = ctx.match?.input || ctx.callbackQuery?.data || ctx.match?.[0] || '';
-  logger.info('HANDLE_CALENDAR', `Пользователь ${userId}, callback: ${callbackData}`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('HANDLE_CALENDAR', `Пользователь ${userIdentifier}, callback: ${callbackData}`);
   
   // Обработка выбора даты
   if (callbackData.startsWith('cal_date_')) {
@@ -37,7 +38,7 @@ export const handleCalendar = async (ctx: any): Promise<void> => {
       return;
     }
 
-    logger.info('HANDLE_CALENDAR', `Выбрана дата: ${formattedDate}, группа: "${currentState.newSantaName}"`);
+    logger.info('HANDLE_CALENDAR', `Пользователь ${userIdentifier}: Выбрана дата: ${formattedDate}, группа: "${currentState.newSantaName}"`);
     
     // Сохраняем дату и переходим к сохранению группы
     updateState(userId, { 

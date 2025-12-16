@@ -3,6 +3,16 @@
  * Формат: дата/время(мск) [этап/действие] лог
  */
 
+/**
+ * Получает идентификатор пользователя для логов (username, имя или ID)
+ */
+export const getUserIdentifier = (from: any): string => {
+  if (!from) return 'неизвестный';
+  if (from.username) return `@${from.username}`;
+  if (from.first_name) return `${from.first_name}${from.last_name ? ' ' + from.last_name : ''}`;
+  return `ID:${from.id}`;
+};
+
 const formatMoscowTime = (): string => {
   const now = new Date();
   const moscowTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));

@@ -1,6 +1,6 @@
 import {Context} from "telegraf";
 import {getState, updateState} from "../services";
-import {getHomeButton, logger} from "../utils";
+import {getHomeButton, logger, getUserIdentifier} from "../utils";
 import {setDeadline} from "./setDeadline";
 
 export const promptCustomPrice = async (ctx: any): Promise<void> => {
@@ -11,7 +11,8 @@ export const promptCustomPrice = async (ctx: any): Promise<void> => {
     return;
   }
 
-  logger.info('PROMPT_CUSTOM_PRICE', `Пользователь ${userId} выбрал ввод своей суммы`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('PROMPT_CUSTOM_PRICE', `Пользователь ${userIdentifier} выбрал ввод своей суммы`);
 
   // Удаляем старое сообщение с выбором цены
   try {
@@ -53,7 +54,8 @@ export const enterCustomPrice = async (ctx: any): Promise<void> => {
   }
 
   const priceText = ctx.message?.text?.trim();
-  logger.info('ENTER_CUSTOM_PRICE', `Пользователь ${userId} ввел цену: "${priceText}"`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('ENTER_CUSTOM_PRICE', `Пользователь ${userIdentifier} ввел цену: "${priceText}"`);
   
   // Удаляем сообщение пользователя с суммой
   try {
@@ -72,12 +74,12 @@ export const enterCustomPrice = async (ctx: any): Promise<void> => {
   // Валидация: проверяем, что это число
   const priceNumber = parseInt(priceText);
   if (isNaN(priceNumber) || priceNumber < 0) {
-    logger.info('ENTER_CUSTOM_PRICE', `Некорректная цена введена: "${priceText}"`);
+    logger.info('ENTER_CUSTOM_PRICE', `Пользователь ${userIdentifier}: Некорректная цена введена: "${priceText}"`);
     await ctx.reply('❌ Пожалуйста, введите корректное число (например: 1500)', getHomeButton());
     return;
   }
 
-  logger.info('ENTER_CUSTOM_PRICE', `Цена сохранена: ${priceNumber} руб.`);
+  logger.info('ENTER_CUSTOM_PRICE', `Пользователь ${userIdentifier}: Цена сохранена: ${priceNumber} руб.`);
   
   // Сохраняем цену
   updateState(userId, { 

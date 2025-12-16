@@ -1,7 +1,7 @@
 import {Context} from "telegraf";
 
 import {getState, clearState} from "../services";
-import {generateRandomCode, getMainMenuKeyboard, logger} from "../utils";
+import {generateRandomCode, getMainMenuKeyboard, logger, getUserIdentifier} from "../utils";
 import {Participants, Santa} from "../models";
 
 const santaInfo = (newSantaName: string, participants: string[], selectedPrice: string, secretCode: number, deadline?: string): string => {
@@ -37,22 +37,24 @@ export const saveGroup = async (ctx: any): Promise<void> => {
     return;
   }
 
+  const userIdentifier = getUserIdentifier(ctx.from);
+
   const state = getState(userId);
   
   if (state.currentStep !== 'saveGroup') {
-    logger.error('SAVE_GROUP', `Неверный шаг. Ожидался saveGroup, получен: ${state.currentStep}`);
+    logger.error('SAVE_GROUP', `Пользователь ${userIdentifier}: Неверный шаг. Ожидался saveGroup, получен: ${state.currentStep}`);
     await ctx.reply('Неверный шаг. Начните заново с команды /start');
     return;
   }
 
   const selectedPrice = ctx.match?.[0] || state.giftPrice || '0';
   
-  logger.info('SAVE_GROUP', `Начало сохранения группы "${state.newSantaName}", участников: ${state.participants?.length}, цена: ${selectedPrice} руб.`);
+  logger.info('SAVE_GROUP', `Пользователь ${userIdentifier}: Начало сохранения группы "${state.newSantaName}", участников: ${state.participants?.length}, цена: ${selectedPrice} руб.`);
   
   try {
     // Генерируем уникальный код
     const secretCode: number = await generateRandomCode();
-    logger.info('SAVE_GROUP', `Сгенерирован код группы: ${secretCode}`);
+    logger.info('SAVE_GROUP', `Пользователь ${userIdentifier}: Сгенерирован код группы: ${secretCode}`);
 
     // Парсим дедлайн в Date, если это возможно, иначе оставляем null
     let deadlineDate: Date | null = null;
@@ -88,7 +90,7 @@ export const saveGroup = async (ctx: any): Promise<void> => {
             // Устанавливаем время на начало дня
             deadlineDate.setHours(0, 0, 0, 0);
           } else {
-            logger.error('SAVE_GROUP', `Ошибка парсинга дедлайна: day=${day}, month=${month}, year=${year}`);
+            logger.error('SAVE_GROUP', `Пользователь ${userIdentifier}: Ошибка парсинга дедлайна: day=${day}, month=${month}, year=${year}`);
           }
         } else {
           // Пробуем стандартный парсинг
@@ -109,7 +111,7 @@ export const saveGroup = async (ctx: any): Promise<void> => {
           }
         }
       } catch (e) {
-        logger.error('SAVE_GROUP', 'Ошибка при парсинге даты дедлайна', e);
+        logger.error('SAVE_GROUP', `Пользователь ${userIdentifier}: Ошибка при парсинге даты дедлайна`, e);
         // Оставляем deadlineDate = null, сохраним как есть
       }
     }
@@ -154,11 +156,11 @@ export const saveGroup = async (ctx: any): Promise<void> => {
 
     clearState(userId);
   } catch (e) {
-    logger.error('SAVE_GROUP', 'Ошибка при создании группы', e);
+    logger.error('SAVE_GROUP', `Пользователь ${userIdentifier}: Ошибка при создании группы`, e);
     try {
       await ctx.reply('Произошла ошибка при создании Деда-Мороза. Попробуйте позже.');
     } catch (replyError) {
-      logger.error('SAVE_GROUP', 'Не удалось отправить сообщение об ошибке', replyError);
+      logger.error('SAVE_GROUP', `Пользователь ${userIdentifier}: Не удалось отправить сообщение об ошибке`, replyError);
     }
   }
 }

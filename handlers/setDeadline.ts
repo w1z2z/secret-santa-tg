@@ -1,5 +1,5 @@
 import {Context} from "telegraf";
-import {getHomeButton, getCurrentMonthCalendar, getMainMenuKeyboard, logger} from "../utils";
+import {getHomeButton, getCurrentMonthCalendar, getMainMenuKeyboard, logger, getUserIdentifier} from "../utils";
 import {updateState, getState} from "../services";
 
 export const setDeadline = async (ctx: any): Promise<void> => {
@@ -12,7 +12,8 @@ export const setDeadline = async (ctx: any): Promise<void> => {
 
   // Сохраняем выбранную цену подарка
   const selectedPrice = ctx.match[0];
-  logger.info('SET_DEADLINE', `Пользователь ${userId} выбрал цену: ${selectedPrice} руб., переход к выбору даты`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('SET_DEADLINE', `Пользователь ${userIdentifier} выбрал цену: ${selectedPrice} руб., переход к выбору даты`);
   updateState(userId, { giftPrice: selectedPrice, currentStep: 'selectDeadline' });
 
   // Удаляем сообщение с выбором цены перед показом календаря

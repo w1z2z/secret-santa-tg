@@ -1,6 +1,6 @@
 import {Markup} from "telegraf";
 import {getState, updateState} from "../services";
-import {getHomeButton, getMainMenuKeyboard, logger} from "../utils";
+import {getHomeButton, getMainMenuKeyboard, logger, getUserIdentifier} from "../utils";
 
 export const addParticipants = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
@@ -12,7 +12,8 @@ export const addParticipants = async (ctx: any): Promise<void> => {
 
   const currentState = getState(userId);
   const newParticipant = ctx.message?.text?.trim();
-  logger.info('ADD_PARTICIPANTS', `Пользователь ${userId} добавил участника: "${newParticipant}"`);
+  const userIdentifier = getUserIdentifier(ctx.from);
+  logger.info('ADD_PARTICIPANTS', `Пользователь ${userIdentifier} добавил участника: "${newParticipant}"`);
 
   // Удаляем сообщение пользователя с именем участника
   try {
@@ -30,13 +31,13 @@ export const addParticipants = async (ctx: any): Promise<void> => {
 
   // Проверка на дубликаты
   if (currentState.participants.includes(newParticipant)) {
-    logger.info('ADD_PARTICIPANTS', `Попытка добавить дубликат участника "${newParticipant}"`);
+    logger.info('ADD_PARTICIPANTS', `Пользователь ${userIdentifier}: Попытка добавить дубликат участника "${newParticipant}"`);
     await ctx.reply(`Участник "${newParticipant}" уже добавлен. Введите другое имя.`);
     return;
   }
 
   const updatedParticipants = [...currentState.participants, newParticipant];
-  logger.info('ADD_PARTICIPANTS', `Всего участников: ${updatedParticipants.length}`);
+  logger.info('ADD_PARTICIPANTS', `Пользователь ${userIdentifier}: Всего участников: ${updatedParticipants.length}`);
 
   // Удаляем предыдущее сообщение бота и сообщение с меню (если есть)
   try {
