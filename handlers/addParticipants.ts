@@ -38,10 +38,13 @@ export const addParticipants = async (ctx: any): Promise<void> => {
   const updatedParticipants = [...currentState.participants, newParticipant];
   logger.info('ADD_PARTICIPANTS', `Всего участников: ${updatedParticipants.length}`);
 
-  // Удаляем предыдущее сообщение бота
+  // Удаляем предыдущее сообщение бота и сообщение с меню (если есть)
   try {
     if (currentState.lastBotMessageId && ctx.chat?.id) {
       await ctx.telegram.deleteMessage(ctx.chat.id, currentState.lastBotMessageId);
+    }
+    if (currentState.lastMenuMessageId && ctx.chat?.id) {
+      await ctx.telegram.deleteMessage(ctx.chat.id, currentState.lastMenuMessageId);
     }
   } catch (e) {
     // Игнорируем ошибку
@@ -54,7 +57,10 @@ export const addParticipants = async (ctx: any): Promise<void> => {
       Markup.button.callback('Завершить ввод участников', 'finish_entering_participants'),
     ]);
     
-    sentMessage = await ctx.reply(`Введенные участники: ${updatedParticipants.join(', ')}`, inlineKeyboard);
+    sentMessage = await ctx.reply(
+      `Введенные участники: ${updatedParticipants.join(', ')}\n\nВы можете продолжить добавлять участников или завершить ввод.`,
+      inlineKeyboard
+    );
     
     // Отправляем отдельное сообщение для установки reply keyboard (кнопки над полем ввода)
     const menuMessage = await ctx.reply('✨', getMainMenuKeyboard());
@@ -69,20 +75,11 @@ export const addParticipants = async (ctx: any): Promise<void> => {
     return;
   } else {
     sentMessage = await ctx.reply(`Введите имя следующего участника (добавлено: ${updatedParticipants.length}, минимум: 3):`, getHomeButton());
+    
+    updateState(userId, { 
+      participants: updatedParticipants, 
+      participantsCount: updatedParticipants.length,
+      lastBotMessageId: sentMessage.message_id
+    });
   }
-
-  // Удаляем предыдущее сообщение с меню (если есть)
-  try {
-    if (currentState.lastMenuMessageId && ctx.chat?.id) {
-      await ctx.telegram.deleteMessage(ctx.chat.id, currentState.lastMenuMessageId);
-    }
-  } catch (e) {
-    // Игнорируем ошибку
-  }
-
-  updateState(userId, { 
-    participants: updatedParticipants, 
-    participantsCount: updatedParticipants.length,
-    lastBotMessageId: sentMessage.message_id
-  });
 }
