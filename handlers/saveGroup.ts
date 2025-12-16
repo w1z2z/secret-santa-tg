@@ -196,12 +196,24 @@ export const saveGroup = async (ctx: any): Promise<void> => {
     const messageText = santaInfo(state.newSantaName, state.participants, selectedPrice, secretCode, state.deadline);
     console.log('Текст сообщения подготовлен, длина:', messageText.length);
     
+    // Удаляем предыдущее сообщение с меню (если есть)
+    try {
+      if (state.lastMenuMessageId && ctx.chat?.id) {
+        await ctx.telegram.deleteMessage(ctx.chat.id, state.lastMenuMessageId);
+      }
+    } catch (e) {
+      // Игнорируем ошибку
+    }
+
     console.log('Отправка сообщения пользователю...');
     await ctx.reply(messageText, {
-      parse_mode: "Markdown",
-      ...getMainMenuKeyboard()
+      parse_mode: "Markdown"
     });
     console.log('Сообщение отправлено');
+    
+    // Отправляем отдельное сообщение для установки reply keyboard (кнопки над полем ввода)
+    await ctx.reply('✨', getMainMenuKeyboard());
+    console.log('Главное меню отправлено');
 
       // const imageUrl: string = 'http://qrcoder.ru/code/?t.me%2Fsecret_grandfather_frost_bot&10&0';
 

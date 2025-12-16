@@ -1,5 +1,5 @@
 import {Context} from "telegraf";
-import {getHomeButton, getCurrentMonthCalendar} from "../utils";
+import {getHomeButton, getCurrentMonthCalendar, getMainMenuKeyboard} from "../utils";
 import {updateState, getState} from "../services";
 
 export const setDeadline = async (ctx: any): Promise<void> => {
@@ -20,10 +20,27 @@ export const setDeadline = async (ctx: any): Promise<void> => {
     // Игнорируем ошибку, если сообщение уже удалено
   }
 
-  await ctx.reply(
+  const calendar = getCurrentMonthCalendar();
+  
+  const calendarMessage = await ctx.reply(
     '📅 Выберите дату в декабре, когда нужно подарить подарки (дедлайн)',
-    getCurrentMonthCalendar()
+    calendar
   );
+  
+  // Удаляем предыдущее сообщение с меню (если есть)
+  const state = getState(userId);
+  try {
+    if (state.lastMenuMessageId && ctx.chat?.id) {
+      await ctx.telegram.deleteMessage(ctx.chat.id, state.lastMenuMessageId);
+    }
+  } catch (e) {
+    // Игнорируем ошибку
+  }
+  
+  // Отправляем отдельное сообщение для установки reply keyboard (кнопки над полем ввода)
+  const menuMessage = await ctx.reply('✨', getMainMenuKeyboard());
+  
+  updateState(userId, { lastMenuMessageId: menuMessage.message_id });
 };
 
 export const enterDeadline = async (ctx: any): Promise<void> => {

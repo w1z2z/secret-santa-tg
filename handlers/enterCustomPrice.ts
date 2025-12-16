@@ -19,12 +19,26 @@ export const promptCustomPrice = async (ctx: any): Promise<void> => {
 
   await ctx.answerCbQuery();
   
-  await ctx.reply(
+  const state = getState(userId);
+  
+  // Удаляем предыдущее сообщение с меню (если есть)
+  try {
+    if (state.lastMenuMessageId && ctx.chat?.id) {
+      await ctx.telegram.deleteMessage(ctx.chat.id, state.lastMenuMessageId);
+    }
+  } catch (e) {
+    // Игнорируем ошибку
+  }
+  
+  const sentMessage = await ctx.reply(
     '💵 Введите максимальную стоимость подарка в рублях (только число, например: 1500):',
     getHomeButton()
   );
 
-  updateState(userId, { currentStep: 'enterCustomPrice' });
+  updateState(userId, { 
+    currentStep: 'enterCustomPrice',
+    lastBotMessageId: sentMessage.message_id
+  });
 };
 
 export const enterCustomPrice = async (ctx: any): Promise<void> => {
@@ -35,6 +49,15 @@ export const enterCustomPrice = async (ctx: any): Promise<void> => {
   }
 
   const priceText = ctx.message?.text?.trim();
+  
+  // Удаляем сообщение пользователя с суммой
+  try {
+    if (ctx.message?.message_id && ctx.chat?.id) {
+      await ctx.telegram.deleteMessage(ctx.chat.id, ctx.message.message_id);
+    }
+  } catch (e) {
+    // Игнорируем ошибку
+  }
   
   if (!priceText) {
     await ctx.reply('Пожалуйста, введите сумму в рублях', getHomeButton());
@@ -53,6 +76,20 @@ export const enterCustomPrice = async (ctx: any): Promise<void> => {
     giftPrice: priceNumber.toString(), 
     currentStep: 'selectDeadline' 
   });
+
+  const state = getState(userId);
+  
+  // Удаляем предыдущее сообщение бота (запрос на ввод суммы) и сообщение с меню (если есть)
+  try {
+    if (state.lastBotMessageId && ctx.chat?.id) {
+      await ctx.telegram.deleteMessage(ctx.chat.id, state.lastBotMessageId);
+    }
+    if (state.lastMenuMessageId && ctx.chat?.id) {
+      await ctx.telegram.deleteMessage(ctx.chat.id, state.lastMenuMessageId);
+    }
+  } catch (e) {
+    // Игнорируем ошибку
+  }
 
   // Вызываем setDeadline с мок-контекстом, чтобы показать календарь
   // setDeadline ожидает ctx.match[0] для получения цены

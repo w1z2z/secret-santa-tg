@@ -1,6 +1,6 @@
 import {Markup} from "telegraf";
 import {getState, updateState} from "../services";
-import {getHomeButton} from "../utils";
+import {getHomeButton, getMainMenuKeyboard} from "../utils";
 
 export const addParticipants = async (ctx: any): Promise<void> => {
   const userId = ctx.from?.id;
@@ -11,6 +11,15 @@ export const addParticipants = async (ctx: any): Promise<void> => {
 
   const currentState = getState(userId);
   const newParticipant = ctx.message?.text?.trim();
+
+  // Удаляем сообщение пользователя с именем участника
+  try {
+    if (ctx.message?.message_id && ctx.chat?.id) {
+      await ctx.telegram.deleteMessage(ctx.chat.id, ctx.message.message_id);
+    }
+  } catch (e) {
+    // Игнорируем ошибку
+  }
 
   if (!newParticipant) {
     await ctx.reply('Пожалуйста, введите имя участника');
@@ -25,13 +34,51 @@ export const addParticipants = async (ctx: any): Promise<void> => {
 
   const updatedParticipants = [...currentState.participants, newParticipant];
 
-  if (updatedParticipants.length >= 3) {
-    await ctx.reply(`Введенные участники: ${updatedParticipants.join(', ')}`, Markup.inlineKeyboard([
-      Markup.button.callback('Завершить ввод участников', 'finish_entering_participants'),
-    ]));
-  } else {
-    await ctx.reply(`Введите имя следующего участника (добавлено: ${updatedParticipants.length}, минимум: 3):`, getHomeButton());
+  // Удаляем предыдущее сообщение бота
+  try {
+    if (currentState.lastBotMessageId && ctx.chat?.id) {
+      await ctx.telegram.deleteMessage(ctx.chat.id, currentState.lastBotMessageId);
+    }
+  } catch (e) {
+    // Игнорируем ошибку
   }
 
-  updateState(userId, { participants: updatedParticipants, participantsCount: updatedParticipants.length });
+  let sentMessage;
+  if (updatedParticipants.length >= 3) {
+    // Отправляем сообщение с inline кнопкой
+    const inlineKeyboard = Markup.inlineKeyboard([
+      Markup.button.callback('Завершить ввод участников', 'finish_entering_participants'),
+    ]);
+    
+    sentMessage = await ctx.reply(`Введенные участники: ${updatedParticipants.join(', ')}`, inlineKeyboard);
+    
+    // Отправляем отдельное сообщение для установки reply keyboard (кнопки над полем ввода)
+    const menuMessage = await ctx.reply('✨', getMainMenuKeyboard());
+    
+    // Сохраняем message_id сообщения с меню для последующего удаления
+    updateState(userId, { 
+      participants: updatedParticipants, 
+      participantsCount: updatedParticipants.length,
+      lastBotMessageId: sentMessage.message_id,
+      lastMenuMessageId: menuMessage.message_id
+    });
+    return;
+  } else {
+    sentMessage = await ctx.reply(`Введите имя следующего участника (добавлено: ${updatedParticipants.length}, минимум: 3):`, getHomeButton());
+  }
+
+  // Удаляем предыдущее сообщение с меню (если есть)
+  try {
+    if (currentState.lastMenuMessageId && ctx.chat?.id) {
+      await ctx.telegram.deleteMessage(ctx.chat.id, currentState.lastMenuMessageId);
+    }
+  } catch (e) {
+    // Игнорируем ошибку
+  }
+
+  updateState(userId, { 
+    participants: updatedParticipants, 
+    participantsCount: updatedParticipants.length,
+    lastBotMessageId: sentMessage.message_id
+  });
 }

@@ -4,19 +4,20 @@ import {updateState} from "../services";
 import {getHomeButton} from "../utils";
 
 // Ввод названия группы
-export const createGroup = (ctx: Context): void => {
+export const createGroup = async (ctx: Context): Promise<void> => {
   const userId = ctx.from?.id;
   if (!userId) {
-    ctx.reply('Ошибка: не удалось определить пользователя');
+    await ctx.reply('Ошибка: не удалось определить пользователя');
     return;
   }
 
-  ctx.reply('Введите название вашей группы 🎅', getHomeButton());
+  const sentMessage = await ctx.reply('Введите название вашей группы 🎅', getHomeButton());
 
   updateState(userId, {
     currentStep: 'promptParticipants',
     newSantaName: '',
     participantsCount: 0,
     participants: [],
+    lastBotMessageId: sentMessage.message_id
   })
 };

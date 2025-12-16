@@ -15,6 +15,15 @@ export const joinExistingGroup = async (ctx: any): Promise<void> => {
   try {
     const secretCodeInput = ctx.message?.text?.trim();
     
+    // Удаляем сообщение пользователя с кодом группы
+    try {
+      if (ctx.message?.message_id && ctx.chat?.id) {
+        await ctx.telegram.deleteMessage(ctx.chat.id, ctx.message.message_id);
+      }
+    } catch (e) {
+      // Игнорируем ошибку
+    }
+    
     // Валидация кода
     if (!secretCodeInput) {
       await ctx.reply('Пожалуйста, введите секретный код', getHomeButton());

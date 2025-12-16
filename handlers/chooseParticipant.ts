@@ -131,6 +131,16 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
       // Игнорируем ошибку, если сообщение уже удалено
     }
 
+    // Удаляем предыдущее сообщение с меню (если есть)
+    const state = getState(userId);
+    try {
+      if (state.lastMenuMessageId && ctx.chat?.id) {
+        await ctx.telegram.deleteMessage(ctx.chat.id, state.lastMenuMessageId);
+      }
+    } catch (e) {
+      // Игнорируем ошибку
+    }
+
     let deadlineText = '';
     if (finalParticipant.santa.deadline) {
       const deadlineDate = new Date(finalParticipant.santa.deadline);
@@ -156,8 +166,8 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
       }
     );
 
-    // Отправляем главное меню отдельным сообщением
-    await ctx.reply('Выберите действие:', getMainMenuKeyboard());
+    // Отправляем главное меню отдельным сообщением для установки клавиатуры
+    await ctx.reply('✨', getMainMenuKeyboard());
 
     clearState(userId);
 
