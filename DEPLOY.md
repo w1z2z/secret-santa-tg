@@ -22,32 +22,32 @@ git push
 
 ```bash
 # Перейти в директорию проекта
-cd /path/to/secret-santa-tg
+cd /bots/secret-santa-tg
 
 # Получить обновления
 git pull
 
 # Пересобрать образ бота
-docker-compose build bot
+docker compose build bot
 
 # Перезапустить только контейнер бота (БД не трогаем!)
-docker-compose up -d bot
+docker compose up -d bot
 
 # Проверить статус
-docker-compose ps
+docker compose ps
 
 # Смотреть логи в реальном времени
-docker-compose logs -f bot
+docker compose logs -f bot
 ```
 
 ### ⚡ Все в одной команде
 
 ```bash
-cd /path/to/secret-santa-tg && \
+cd /bots/secret-santa-tg && \
 git pull && \
-docker-compose build bot && \
-docker-compose up -d bot && \
-docker-compose logs -f bot
+docker compose build bot && \
+docker compose up -d bot && \
+docker compose logs -f bot
 ```
 
 ---
@@ -62,8 +62,8 @@ git log --oneline
 git checkout <hash-коммита>
 
 # Пересобрать и перезапустить
-docker-compose build bot
-docker-compose up -d bot
+docker compose build bot
+docker compose up -d bot
 ```
 
 ---
@@ -119,7 +119,7 @@ MONGO_URI=mongodb://db:27017/secret-santa
 
 ### 🐳 Docker Compose
 
-В продакшене используется `docker-compose.yml`, где:
+В продакшене используется `docker compose` (через пробел, без дефиса), где:
 - Сервис `db` - MongoDB контейнер
 - Сервис `bot` - контейнер с ботом
 - Оба сервиса находятся в одной сети `secret-santa-network`
@@ -132,8 +132,8 @@ MONGO_URI=mongodb://db:27017/secret-santa
 ### 1. Клонировать репозиторий
 
 ```bash
-git clone <your-repo-url>
-cd secret-santa-tg
+git clone <your-repo-url> /bots/secret-santa-tg
+cd /bots/secret-santa-tg
 ```
 
 ### 2. Создать `.env` файл
@@ -155,13 +155,13 @@ nano .env
 
 ```bash
 # Запустить БД и бота
-docker-compose up -d
+docker compose up -d
 
 # Проверить что всё запустилось
-docker-compose ps
+docker compose ps
 
 # Смотреть логи
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ---
@@ -172,48 +172,48 @@ docker-compose logs -f
 
 ```bash
 # Все логи
-docker-compose logs -f
+docker compose logs -f
 
 # Только бот
-docker-compose logs -f bot
+docker compose logs -f bot
 
 # Только БД
-docker-compose logs -f db
+docker compose logs -f db
 
 # Последние 100 строк
-docker-compose logs --tail=100 bot
+docker compose logs --tail=100 bot
 ```
 
 ### Управление контейнерами
 
 ```bash
 # Остановить всё
-docker-compose down
+docker compose down
 
 # Остановить только бота (БД продолжит работать)
-docker-compose stop bot
+docker compose stop bot
 
 # Запустить только бота
-docker-compose start bot
+docker compose start bot
 
 # Перезапустить только бота
-docker-compose restart bot
+docker compose restart bot
 
 # Статус контейнеров
-docker-compose ps
+docker compose ps
 ```
 
 ### Работа с БД
 
 ```bash
 # Подключиться к MongoDB контейнеру
-docker-compose exec db mongosh -u $MONGO_USERNAME -p $MONGO_PASSWORD
+docker compose exec db mongosh -u $MONGO_USERNAME -p $MONGO_PASSWORD
 
 # Бэкап БД
-docker-compose exec db mongodump --out /data/backup --username $MONGO_USERNAME --password $MONGO_PASSWORD
+docker compose exec db mongodump --out /data/backup --username $MONGO_USERNAME --password $MONGO_PASSWORD
 
 # Восстановление БД из бэкапа
-docker-compose exec db mongorestore /data/backup --username $MONGO_USERNAME --password $MONGO_PASSWORD
+docker compose exec db mongorestore /data/backup --username $MONGO_USERNAME --password $MONGO_PASSWORD
 ```
 
 ---
@@ -224,7 +224,7 @@ docker-compose exec db mongorestore /data/backup --username $MONGO_USERNAME --pa
 2. **БД не трогается при деплое** - обновляется только контейнер бота
 3. **Токены должны быть разные** для локальной разработки и продакшена
 4. **Проверяйте логи** после каждого деплоя: `docker-compose logs -f bot`
-5. **Мониторьте статус**: `docker-compose ps` - все сервисы должны быть `Up`
+5. **Мониторьте статус**: `docker compose ps` - все сервисы должны быть `Up`
 
 ---
 
@@ -232,8 +232,8 @@ docker-compose exec db mongorestore /data/backup --username $MONGO_USERNAME --pa
 
 После успешного деплоя проверьте:
 
-1. ✅ Контейнеры запущены: `docker-compose ps`
-2. ✅ Нет ошибок в логах: `docker-compose logs bot`
+1. ✅ Контейнеры запущены: `docker compose ps`
+2. ✅ Нет ошибок в логах: `docker compose logs bot`
 3. ✅ Бот отвечает на команды в Telegram
 4. ✅ БД доступна и работает
 
@@ -241,7 +241,7 @@ docker-compose exec db mongorestore /data/backup --username $MONGO_USERNAME --pa
 
 ## 📞 Если что-то пошло не так
 
-1. Проверьте логи: `docker-compose logs bot`
+1. Проверьте логи: `docker compose logs bot`
 2. Проверьте переменные окружения в `.env`
 3. Убедитесь что токен правильный
 4. Проверьте что `MONGO_HOST=db` (не localhost!)
