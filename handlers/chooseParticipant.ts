@@ -156,7 +156,7 @@ export const chooseParticipant = async (ctx: any): Promise<void> => {
       `Вы присоединились к группе *${finalParticipant?.santa?.name}* 🎄\n\n` +
       `Ваше имя - *${finalParticipant.name}* 👤\n\n` +
       `Вам нужно подготовить подарок для - *${finalParticipant.recipient.name}* 🎁\n\n` +
-      `Предполагаемая цена подарка - *${finalParticipant.santa.giftPrice === "0" ? 'Без ограничений' : 'до ' + finalParticipant.santa.giftPrice + ' руб.'}* 💰\n\n` +
+      `Стоимость подарка - *${finalParticipant.santa.giftPrice === "0" ? 'Без ограничений' : 'на ' + finalParticipant.santa.giftPrice + ' руб.'}* 💰\n\n` +
       deadlineText,
       {
         parse_mode: "Markdown",

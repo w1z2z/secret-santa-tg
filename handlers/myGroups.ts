@@ -88,7 +88,7 @@ export const showGroupDetails = async (ctx: any): Promise<void> => {
       message += `*Получатель подарка:* еще не назначен ⏳\n\n`;
     }
 
-    message += `*Цена подарка:* ${santa.giftPrice === '0' ? 'Без ограничений' : 'до ' + santa.giftPrice + ' руб.'} 💰\n\n`;
+    message += `*Цена подарка:* ${santa.giftPrice === '0' ? 'Без ограничений' : 'на ' + santa.giftPrice + ' руб.'} 💰\n\n`;
     if (santa.deadline) {
       const deadlineDate = new Date(santa.deadline);
       const formattedDeadline = deadlineDate.toLocaleDateString('ru-RU', { 

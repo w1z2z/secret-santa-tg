@@ -12,7 +12,7 @@ const santaInfo = (newSantaName: string, participants: string[], selectedPrice: 
 *Информация о группе:*
 Название: *${newSantaName}* 🎄
 Участники: *${participants.join(', ')}* 👥
-Цена подарка: *${selectedPrice === "0" ? 'Без ограничений' : 'до ' + selectedPrice + ' руб.'}* 💰${deadlineText}
+Цена подарка: *${selectedPrice === "0" ? 'Без ограничений' : 'на ' + selectedPrice + ' руб.'}* 💰${deadlineText}
 
 *Как присоединиться:*
 1️⃣ Нажмите на ссылку: [Присоединиться к группе](https://t.me/secret_grandfather_frost_bot?start=${secretCode}) 📩
