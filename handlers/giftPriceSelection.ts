@@ -34,11 +34,11 @@ export const giftPriceSelection = async (ctx: Context): Promise<void> => {
   }
 
   const inlineKeyboard = Markup.inlineKeyboard([
-    Markup.button.callback('до 500 руб.', '500'),
-    Markup.button.callback('до 1000 руб.', '1000'),
-    Markup.button.callback('до 3000 руб.', '3000'),
-    Markup.button.callback('до 5000 руб.', '5000'),
-    Markup.button.callback('до 10000 руб.', '10000'),
+    Markup.button.callback('на 500 руб.', '500'),
+    Markup.button.callback('на 1000 руб.', '1000'),
+    Markup.button.callback('на 3000 руб.', '3000'),
+    Markup.button.callback('на 5000 руб.', '5000'),
+    Markup.button.callback('на 10000 руб.', '10000'),
     Markup.button.callback('Без ограничений', '0'),
     Markup.button.callback('💵 Ввести свою сумму', 'custom_price'),
   ], { columns: 2 });
